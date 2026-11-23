@@ -1,0 +1,1616 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>江川协同 · 超级分身 原型 v7</title>
+<style>
+:root{
+  --bg:#f6f5f2; --pn:#fff; --ink:#1c2026; --ink2:#5b636e; --ink3:#8f959e; --line:#e6e3dd; --line2:#f0eee9; --fill:#f3f2ee;
+  --acc:#4f46e5; --acc-bg:#eef0ff; --warn:#c2410c; --warn-bg:#fff3e8; --ok:#2f7d45; --ok-bg:#eaf7ee; --red:#e03131; --wait:#7048d8; --wait-bg:#f3effe;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13.5px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+small,.mut{color:var(--ink3);font-size:12px}
+.grow{flex:1;min-width:0}
+.row{display:flex;align-items:center;gap:8px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 12px;font-size:12.5px;white-space:nowrap;transition:.12s}
+.btn:hover{border-color:#bbb6ac}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.sm{padding:2px 9px;font-size:12px;border-radius:6px}
+.btn.lk{border:none;background:none;color:var(--acc);padding:2px 4px}
+.tag{font-size:10.5px;border-radius:4px;padding:0 6px;line-height:18px;border:1px solid var(--line);color:var(--ink2);background:#fff;white-space:nowrap;display:inline-block}
+.tag.ai{border-color:#d6d8fb;color:var(--acc);background:var(--acc-bg)}
+.tag.warn{border-color:#f5cfb4;color:var(--warn);background:var(--warn-bg)}
+.tag.ok{border-color:#c5e5ce;color:var(--ok);background:var(--ok-bg)}
+.tag.wait{border-color:#dcd0fb;color:var(--wait);background:var(--wait-bg)}
+.spin{width:11px;height:11px;border-radius:50%;border:2px solid var(--acc);border-top-color:transparent;animation:sp .8s linear infinite;display:inline-block;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes up{from{transform:translateY(5px);opacity:0}}
+.av{width:30px;height:30px;border-radius:50%;background:#dfe3ea;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#3d4450;flex:none}
+.av.sm{width:24px;height:24px;font-size:11px}
+.av.g{border-radius:8px}
+.av.ext{background:#fff;border:1px dashed #9aa}
+
+/* 分身光球 */
+.orb{width:22px;height:22px;border-radius:50%;flex:none;display:inline-block;background:radial-gradient(circle at 34% 30%,#fff 0,#dfe2ff 14%,#7c74f0 48%,#2c2475 100%);box-shadow:0 2px 8px rgba(79,70,229,.35)}
+.orb.lg{width:76px;height:76px;box-shadow:0 0 0 10px rgba(99,102,241,.07),0 14px 40px rgba(79,70,229,.35);animation:br 4s ease-in-out infinite}
+.orb.md{width:34px;height:34px}
+.orb.xs{width:18px;height:18px}
+.orb.busy{animation:pulse 1.4s ease-in-out infinite}
+@keyframes br{50%{transform:scale(1.04);box-shadow:0 0 0 16px rgba(99,102,241,.05),0 14px 46px rgba(79,70,229,.42)}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(99,102,241,.18),0 2px 8px rgba(79,70,229,.35)}}
+
+/* 框架 */
+.tb{height:46px;display:flex;align-items:center;gap:14px;padding:0 14px 0 16px;background:var(--pn);border-bottom:1px solid var(--line)}
+.brand{font-weight:600;display:flex;align-items:center;gap:8px;width:220px}
+.brand i{width:24px;height:24px;border-radius:7px;background:var(--ink);color:#fff;font-style:normal;font-size:12px;display:flex;align-items:center;justify-content:center}
+.gs{margin:0 auto;width:440px;height:30px;border:1px solid var(--line);border-radius:15px;background:var(--fill);color:var(--ink3);display:flex;align-items:center;gap:8px;padding:0 14px;font-size:12.5px;cursor:pointer}
+.uinfo{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2);width:220px;justify-content:flex-end}
+.body{display:flex;height:calc(100vh - 46px)}
+.rail{width:72px;flex:none;background:var(--fill);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:3px}
+.rail button{width:60px;border:none;background:none;border-radius:10px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--ink2);position:relative}
+.rail button:hover{background:#e9e7e1}
+.rail button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+.rail .ic{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:1}
+.rail .bd{position:absolute;top:3px;right:8px;min-width:16px;height:16px;border-radius:8px;font-size:10px;line-height:16px;padding:0 4px;color:#fff;background:var(--red);font-weight:600}
+.rail .bd.o{background:var(--warn)}.rail .bd.g{background:#8f959e}
+.rail .rrun{position:absolute;top:4px;right:10px}
+.rail hr{width:36px;border:none;border-top:1px solid var(--line);margin:4px 0}
+.rail .sp{flex:1}
+.page{flex:1;min-width:0;position:relative;overflow:hidden}
+
+/* 输入框 */
+.comp{border:1.5px solid var(--line);border-radius:16px;background:#fff;padding:10px 12px 8px;transition:.15s;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+.comp:focus-within{border-color:#a5a0f5;box-shadow:0 0 0 4px var(--acc-bg)}
+.comp textarea{width:100%;border:none;outline:none;resize:none;height:46px;background:none;font-size:14px}
+.comp .ct{display:flex;align-items:center;gap:8px}
+.comp .opt{font-size:12px;border:1px solid var(--line);border-radius:12px;padding:1px 9px;color:var(--ink2);background:#fff;white-space:nowrap}
+.comp .plus{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:#fff;padding:0;color:var(--ink2)}
+.send{width:32px;height:32px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:15px;flex:none}
+.comp.sm{border-radius:12px;padding:8px 10px 6px}
+.comp.sm textarea{height:38px;font-size:13px}
+.comp.sm .send{width:28px;height:28px;font-size:13px}
+
+/* ========== 首页：和分身的对话 ========== */
+.home{height:100%;display:flex;flex-direction:column;background:radial-gradient(1200px 500px at 50% -10%,#eceaff 0,rgba(236,234,255,0) 60%),var(--bg)}
+.hero{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:9vh 20px 30px}
+.hero h1{font-size:26px;font-weight:600;margin:22px 0 4px;letter-spacing:.3px}
+.hero p{color:var(--ink2);margin:0 0 26px}
+.hero .comp{width:min(720px,100%)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 0;max-width:760px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:16px;padding:4px 13px;font-size:12.5px;color:var(--ink2)}
+.chips button:hover{border-color:#a5a0f5;color:var(--acc)}
+.tcards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:min(720px,100%);margin-top:34px}
+.tcard{border:1px solid var(--line);background:rgba(255,255,255,.8);border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;transition:.12s}
+.tcard:hover{border-color:#bbb6ac;background:#fff}
+.tcard .k{font-size:11.5px;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.tcard .v{font-size:13.5px;margin-top:4px}
+.tcard .v b{color:var(--warn)}
+.thread{flex:1;overflow:auto;padding:22px 20px 10px}
+.tin{max-width:760px;margin:0 auto}
+.thead{max-width:760px;margin:0 auto 10px;display:flex;align-items:center;gap:10px}
+.dock{padding:8px 20px 18px}
+.dock .comp{max-width:760px;margin:0 auto}
+.dock .chips{margin:0 auto 8px;justify-content:flex-start}
+.m{display:flex;gap:10px;margin-bottom:16px;animation:up .25s}
+.m.me{justify-content:flex-end}
+.m.me .bb{background:var(--ink);color:#fff;border-radius:14px 4px 14px 14px;padding:8px 13px;max-width:560px}
+.m.ai .bb{max-width:620px;padding-top:2px}
+.m.ai .w{font-size:11.5px;color:var(--ink3);margin-bottom:2px}
+.quote{border-left:3px solid #c9c5bd;background:rgba(0,0,0,.035);padding:4px 10px;margin:2px 0 6px;font-size:12.5px;border-radius:0 6px 6px 0}
+.m.me .quote{border-left-color:#888;background:rgba(255,255,255,.12)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.scard{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 12px;margin-top:8px;cursor:pointer;max-width:460px;transition:.12s}
+.scard:hover{border-color:#a5a0f5}
+.scard b{display:block;font-size:13px;font-weight:600}
+.brief{border:1px solid var(--line);background:#fff;border-radius:14px;margin-top:6px;overflow:hidden}
+.brief .h{padding:10px 14px;border-bottom:1px solid var(--line2);font-weight:600}
+.brief .r{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line2);font-size:13px}
+.brief .r:last-child{border-bottom:none}
+.brief .r.done .tx{color:var(--ink3);text-decoration:line-through}
+.typing span{display:inline-block;width:5px;height:5px;border-radius:50%;background:#aaa;margin:0 1.5px;animation:ty 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes ty{50%{transform:translateY(-3px);opacity:.4}}
+
+/* 分身小球（非首页常驻） */
+.dot{position:absolute;right:22px;bottom:150px;z-index:30;border:none;background:none;padding:0;border-radius:50%}
+.dot .orb{width:46px;height:46px}
+.dot .tip{position:absolute;right:54px;top:50%;transform:translateY(-50%);background:var(--ink);color:#fff;font-size:12px;border-radius:8px;padding:3px 9px;white-space:nowrap;opacity:0;transition:.15s;pointer-events:none}
+.dot:hover .tip{opacity:1}
+.dot .bd{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:9px;background:var(--warn);color:#fff;font-size:10px;line-height:17px;font-weight:600;padding:0 4px}
+.dpop{position:absolute;right:22px;bottom:208px;width:380px;height:min(540px,calc(100% - 228px));z-index:31;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px rgba(20,20,50,.22);display:flex;flex-direction:column;overflow:hidden;animation:up .2s}
+.dpop .hd{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line2)}
+.dpop .ctx{margin:8px 14px 0;font-size:11.5px;color:var(--acc);background:var(--acc-bg);border-radius:10px;padding:2px 10px;align-self:flex-start;max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dpop .ms{flex:1;overflow:auto;padding:12px 14px}
+.dpop .m .bb{max-width:290px!important;font-size:13px}
+.dpop .ft{padding:0 12px 12px}
+
+/* ========== 工作台 ========== */
+.ws{display:grid;grid-template-columns:268px minmax(0,1fr) 360px;height:100%}
+.wl{border-right:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0}
+.wl .sc{flex:1;overflow:auto;padding:12px 10px}
+.sh{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink2);padding:8px 8px 4px}
+.sh .c{margin-left:auto;font-weight:400;color:var(--ink3)}
+.si{display:block;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:10px;padding:7px 10px;margin:1px 0}
+.si:hover{background:#f0eee9}
+.si.on{background:#fff;border-color:var(--line)}
+.si .t{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si .s{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--ink3)}
+.si .s span:first-child{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl{border-radius:10px;margin:1px 0}
+.pl .pr{display:flex;align-items:center;gap:9px;padding:7px 8px;cursor:pointer;border-radius:10px}
+.pl .pr:hover{background:#f0eee9}
+.pl .pi{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.pl .nm{font-size:13px;line-height:1.3}
+.pl .nm small{display:block;font-size:11px}
+.pl.off .nm,.pl.off .pi{opacity:.45}
+.sw{width:30px;height:18px;border-radius:9px;background:#d4d1ca;border:none;position:relative;padding:0;flex:none;transition:.15s}
+.sw::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on{background:var(--ok)}.sw.on::after{left:14px}
+.pd{padding:2px 10px 8px 43px;font-size:12px;color:var(--ink2)}
+.pd div{padding:1px 0}
+.pd b{font-weight:600;color:var(--ink3);font-size:11px;margin-right:4px}
+.wm{display:flex;flex-direction:column;min-height:0;background:var(--pn)}
+.wh{padding:14px 24px 12px;border-bottom:1px solid var(--line2)}
+.wh h2{margin:0;font-size:17px}
+.wh .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:12px}
+.wt{flex:1;overflow:auto;padding:18px 24px}
+.wt .tin{max-width:720px}
+.run{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fcfbf9;margin-top:4px}
+.run .rh{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:8px}
+.step{display:flex;gap:10px;position:relative;padding-bottom:12px}
+.step:last-child{padding-bottom:0}
+.step:not(:last-child)::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:1.5px;background:var(--line)}
+.step .ic{width:21px;height:21px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;position:relative;z-index:1}
+.step.done .ic{background:var(--ok-bg);color:var(--ok)}
+.step.run .ic{background:var(--acc-bg)}
+.step.todo .ic{background:#fff;border:1.5px solid #d4d1ca}
+.step.confirm .ic{background:var(--warn);color:#fff}
+.step .sb{flex:1;min-width:0}
+.step .st{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:13px}
+.step.todo .st b{font-weight:400;color:var(--ink3)}
+.step .tm{margin-left:auto;font-size:11px;color:var(--ink3)}
+.step .sd{font-size:12.5px;color:var(--ink2);margin-top:1px}
+.kd{font-size:10.5px;border-radius:4px;padding:0 5px;line-height:17px;background:var(--fill);color:var(--ink2);white-space:nowrap}
+.k-conn{background:#e8f3f5;color:#0b7285}.k-expert{background:#f3effe;color:var(--wait)}.k-skill{background:var(--acc-bg);color:var(--acc)}.k-write{background:var(--ok-bg);color:var(--ok)}.k-wait,.k-im{background:var(--warn-bg);color:var(--warn)}
+.achip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:4px 10px 4px 6px;margin-top:6px;background:#fff;cursor:pointer;font-size:12.5px}
+.achip:hover{border-color:#a5a0f5}
+.cp{margin-top:8px;border:1.5px solid #f1c7a6;background:linear-gradient(#fffaf5,#fff);border-radius:12px;padding:12px 14px;animation:up .3s}
+.cp .q{font-weight:600}
+.cp .why{font-size:12px;color:var(--ink2);margin:2px 0 8px}
+.cp table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px;background:#fff}
+.cp th,.cp td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line2)}
+.cp th{background:#faf9f6;color:var(--ink2);font-weight:600;font-size:12px}
+.cp .fl{color:var(--warn)}
+.empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink2);padding:20px}
+.wr{border-left:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0}
+.wr .hd{padding:12px 14px 0}
+.tabs{display:flex;gap:14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+.tabs span{padding:6px 0;cursor:pointer}
+.tabs span.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ink)}
+.al{padding:10px 12px 4px;max-height:42%;overflow:auto}
+.ai2{display:flex;gap:9px;align-items:center;padding:7px 9px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.ai2:hover{background:#f0eee9}
+.ai2.on{background:#fff;border-color:var(--line)}
+.ai2.new{animation:up .4s;border-color:var(--ok)}
+.ext{width:28px;height:34px;border-radius:5px;border:1.5px solid #c9c5bd;font-size:8.5px;font-weight:700;display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;flex:none;color:var(--ink2);background:#fff}
+.ext.XLS{border-color:#8dc29c;color:var(--ok)}.ext.DOC{border-color:#9db0ee;color:#3451d1}.ext.PDF{border-color:#e9a28a;color:var(--warn)}.ext.PPT{border-color:#f0b37e;color:#c2410c}.ext.MD{border-color:#a5a0f5;color:var(--acc)}
+.ai2 .t{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv{flex:1;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--line);margin-top:6px}
+.pv .ph2{display:flex;align-items:center;gap:6px;padding:10px 14px;flex-wrap:wrap}
+.pv .box{flex:1;overflow:auto;margin:0 14px;border:1px solid var(--line);border-radius:10px;background:#eceae5;padding:12px}
+.pv .box .paper{transform-origin:top left;zoom:.72}
+.pv .note{font-size:11.5px;color:var(--ink3);padding:8px 14px 12px}
+
+/* 产物渲染 */
+.paper{background:#fff;border:1px solid #dcd9d2;border-radius:4px;padding:28px 36px;font-size:13px;line-height:1.8;max-width:680px;margin:0 auto}
+.paper h1{font-size:20px;margin:0 0 8px}.paper h2{font-size:15px;margin:16px 0 4px}.paper h3{text-align:center;font-size:16px;margin:0 0 12px}
+.paper p{margin:3px 0}
+.paper blockquote{margin:6px 0 12px;border-left:3px solid #aaa;background:#f6f6f4;padding:4px 10px;color:var(--ink2);font-size:12px}
+.paper table{border-collapse:collapse;font-size:12px;width:100%;margin:6px 0}
+.paper td,.paper th{border:1px solid #ddd;padding:4px 8px;text-align:left}
+.paper th{background:#f3f2ee}
+.ph{display:block;height:9px;border-radius:3px;background:#ecebe7;margin:8px 0}
+.xls{border-collapse:collapse;background:#fff;font-size:12.5px;margin:0 auto}
+.xls th,.xls td{border:1px solid #dcd9d2;padding:5px 10px;text-align:left;white-space:nowrap}
+.xls th{background:#f3f2ee;font-weight:600}
+.xls .fl{background:#fff1e4}.xls .fx{background:#eaf7ee}
+.slides{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:680px;margin:0 auto}
+.slide{aspect-ratio:16/9;background:#fff;border:1px solid #ccc;border-radius:4px;padding:10px;font-size:12px;position:relative}
+.slide i{position:absolute;right:8px;bottom:4px;font-size:10px;color:var(--ink3);font-style:normal}
+
+/* ========== 事项（清单式） ========== */
+.tk{display:grid;grid-template-columns:232px minmax(0,1fr) 380px;height:100%}
+.tl{border-right:1px solid var(--line);background:#faf9f6;overflow:auto;padding:12px 10px}
+.li{display:flex;align-items:center;gap:9px;width:100%;border:none;background:none;border-radius:8px;padding:6px 10px;text-align:left;font-size:13px}
+.li:hover{background:#f0eee9}
+.li.on{background:#e9e7ff;color:var(--acc);font-weight:600}
+.li .i{width:18px;text-align:center;flex:none}
+.li .c{margin-left:auto;font-size:11.5px;color:var(--ink3);font-weight:400}
+.tm2{display:flex;flex-direction:column;min-height:0;background:#fff}
+.tm2 .hd{padding:16px 26px 10px;display:flex;align-items:center;gap:10px}
+.tm2 .hd h2{margin:0;font-size:18px}
+.qa{margin:0 26px 8px;display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:10px;padding:7px 12px;background:var(--fill)}
+.qa:focus-within{border-color:#a5a0f5;background:#fff}
+.qa input{flex:1;border:none;outline:none;background:none}
+.tls{flex:1;overflow:auto;padding:0 26px 30px}
+.gh{font-size:12px;font-weight:600;color:var(--ink2);padding:12px 0 4px;display:flex;gap:6px}
+.gh.r{color:var(--red)}
+.tr{display:flex;align-items:center;gap:10px;padding:8px 8px;border-bottom:1px solid var(--line2);border-radius:6px;cursor:pointer;animation:up .25s}
+.tr:hover{background:#faf9f6}
+.tr.on{background:#f3f2ff}
+.ck{width:17px;height:17px;border-radius:4px;border:1.5px solid #b8b4ab;background:#fff;flex:none;padding:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+.ck.p3{border-color:var(--red)}.ck.p2{border-color:#e8890c}.ck.p1{border-color:#4c7bd9}
+.ck.on{background:#b8b4ab;border-color:#b8b4ab}
+.tr.dn .tt{color:var(--ink3);text-decoration:line-through}
+.tr .tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .src{font-size:12px;color:var(--ink3)}
+.tr .lt{font-size:11.5px;color:var(--ink3)}
+.tr .dd{font-size:12px;color:var(--ink2);min-width:64px;text-align:right}
+.dd.r{color:var(--red)}.dd.t{color:var(--acc)}
+.td{border-left:1px solid var(--line);background:#fff;overflow:auto;padding:18px 22px}
+.td .tt2{display:flex;gap:10px;align-items:flex-start}
+.td .tt2 input{flex:1;border:none;outline:none;font-size:17px;font-weight:600;padding:0}
+.kv{display:grid;grid-template-columns:64px 1fr;gap:9px 10px;margin:16px 0;font-size:13px;align-items:center}
+.kv dt{color:var(--ink3)}.kv dd{margin:0}
+.box2{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px}
+.box2 .h{font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.fsbox{border-color:#d6d8fb;background:linear-gradient(#f7f7ff,#fff)}
+.sub{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:13px}
+.td textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;resize:vertical;min-height:70px;outline:none;font-size:13px;background:#fcfbf9}
+
+/* ========== 消息 ========== */
+.im{display:grid;grid-template-columns:300px minmax(0,1fr);height:100%}
+.il{border-right:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0}
+.il .hd{padding:12px 14px 8px}
+.il .sr{border:1px solid var(--line);border-radius:8px;padding:4px 10px;color:var(--ink3);font-size:12.5px;background:#fff}
+.cs{display:flex;gap:10px;align-items:center;padding:9px 14px;cursor:pointer}
+.cs:hover{background:#f0eee9}
+.cs.on{background:#e9e7e1}
+.cs .n{font-weight:600;font-size:13px;display:flex;gap:5px;align-items:center}
+.cs .p{font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs .rt{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11px;color:var(--ink3)}
+.un{background:var(--red);color:#fff;border-radius:8px;font-size:10px;padding:0 5px;line-height:16px}
+.aim{font-size:9.5px;border:1px solid #c8c4bb;border-radius:3px;padding:0 3px;color:var(--ink2);font-weight:400}
+.aim.off{border-style:dashed;color:var(--ink3)}
+.srt{font-size:10px;border-radius:3px;padding:0 4px;background:var(--warn-bg);color:var(--warn);white-space:nowrap}
+.ic2{display:flex;flex-direction:column;min-height:0;background:#fff}
+.ic2 .hd{height:56px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 20px}
+.ims{flex:1;overflow:auto;padding:16px 22px}
+.day{text-align:center;font-size:11.5px;color:var(--ink3);margin:8px 0 12px}
+.cm{display:flex;gap:9px;margin-bottom:14px;position:relative}
+.cm.me{flex-direction:row-reverse}
+.cm .w{font-size:11.5px;color:var(--ink3);margin-bottom:2px}
+.cm.me .w{text-align:right}
+.cm .b{border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:#fff;max-width:440px;font-size:13px}
+.cm.me .b{background:#eef0ff;border-color:#dcdffb}
+.cm .ha{display:none;position:absolute;top:-6px;left:40px;gap:4px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.08);z-index:2}
+.cm:hover .ha{display:flex}
+.ha button{border:none;background:none;font-size:12px;padding:2px 8px;border-radius:5px;color:var(--ink2);white-space:nowrap}
+.ha button:hover{background:var(--acc-bg);color:var(--acc)}
+.ha button.fs{color:var(--acc);font-weight:600}
+.shadow{border:1.5px dashed #a5a0f5!important;background:#fafaff!important}
+.fsn{font-size:10px;border-radius:3px;padding:0 4px;background:var(--acc-bg);color:var(--acc);margin-left:4px}
+.file{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:260px;background:#fff;cursor:pointer}
+.file:hover{border-color:#a5a0f5}
+.icard{border:1px solid var(--line);border-radius:10px;width:320px;background:#fff;font-size:12.5px;overflow:hidden}
+.icard .h{padding:7px 11px;font-weight:600;border-bottom:1px solid #e6e4fb}
+.icard .r{display:flex;gap:6px;padding:4px 11px;align-items:center}
+.icard .f{border-top:1px solid #e6e4fb;padding:4px 8px;text-align:right}
+.icomp{border-top:1px solid var(--line);padding:10px 16px 14px}
+.dtag{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;color:var(--acc);background:var(--acc-bg);border-radius:10px;padding:1px 9px;margin-bottom:6px}
+.att{display:inline-flex;gap:5px;align-items:center;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 8px;margin:0 0 6px 6px;background:#fff}
+
+/* ========== 笔记 ========== */
+.nt{display:grid;grid-template-columns:300px minmax(0,1fr);height:100%}
+.nl{border-right:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0}
+.nl .hd{padding:12px 14px 8px;display:flex;gap:8px;align-items:center}
+.nl .hd b{font-size:15px}
+.ni{padding:10px 16px;border-bottom:1px solid var(--line2);cursor:pointer}
+.ni:hover{background:#f0eee9}
+.ni.on{background:#fff;box-shadow:inset 3px 0 0 var(--acc)}
+.ni .t{font-weight:600;font-size:13px}
+.ni .p{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ni .m{font-size:11px;color:var(--ink3);display:flex;gap:6px;align-items:center}
+.ne{display:flex;flex-direction:column;min-height:0;background:#fff}
+.ne .tb2{display:flex;align-items:center;gap:8px;padding:10px 24px;border-bottom:1px solid var(--line2)}
+.ne .ed{flex:1;overflow:auto;padding:22px 0}
+.ne .ed .in{max-width:720px;margin:0 auto;padding:0 30px}
+.ne input.tt{width:100%;border:none;outline:none;font-size:22px;font-weight:600;padding:0;margin-bottom:6px}
+.ne textarea.bd{width:100%;border:none;outline:none;resize:none;min-height:300px;font-size:14px;line-height:1.9}
+.pvt{font-size:11.5px;color:var(--ink3);border:1px dashed #ccc;border-radius:6px;padding:2px 9px;display:inline-block;margin-bottom:12px}
+.sug{border:1px solid #d6d8fb;background:linear-gradient(#f7f7ff,#fff);border-radius:12px;padding:12px 14px;margin-top:8px;animation:up .3s}
+
+/* ========== 资料库 ========== */
+.lb{display:grid;grid-template-columns:232px minmax(0,1fr) 400px;height:100%}
+.lm{display:flex;flex-direction:column;min-height:0;background:#fff}
+.lm .hd{padding:16px 24px 10px;display:flex;align-items:center;gap:10px}
+.lm .hd h2{margin:0;font-size:18px}
+.lt2{flex:1;overflow:auto;padding:0 24px 20px}
+.lt2 table{width:100%;border-collapse:collapse;font-size:13px}
+.lt2 th{text-align:left;font-weight:500;color:var(--ink3);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+.lt2 td{padding:8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.lt2 tr.fr{cursor:pointer}
+.lt2 tr.fr:hover td{background:#faf9f6}
+.lt2 tr.on td{background:#f3f2ff}
+.lp{border-left:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0}
+.lp .hd{padding:14px 16px 10px}
+.lp .box{flex:1;overflow:auto;margin:0 14px;border:1px solid var(--line);border-radius:10px;background:#eceae5;padding:12px}
+.lp .box .paper{zoom:.7}
+.lp .ft{padding:10px 16px 14px;font-size:12px;color:var(--ink2)}
+
+/* ========== v5：客户端窗口 ========== */
+html,body{background:#d9d6cf}
+.win{position:fixed;inset:10px;border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.25),0 0 0 1px rgba(0,0,0,.12);background:var(--bg)}
+.win .tb{height:40px;background:#efede8;user-select:none}
+.lights{display:flex;gap:7px;width:62px}.lights i{width:12px;height:12px;border-radius:50%;background:#ff5f57}.lights i:nth-child(2){background:#febc2e}.lights i:nth-child(3){background:#28c840}
+.win .body{height:calc(100% - 40px)}
+.vtag{font-size:10.5px;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--ink3);background:#fff;font-weight:400}
+.pghd{display:flex;align-items:baseline;gap:10px;padding:12px 20px 10px;border-bottom:1px solid var(--line);background:var(--pn)}
+.pghd b{font-size:15px}.pghd span{font-size:12px;color:var(--ink3)}
+.pgwrap{display:flex;flex-direction:column;height:100%}.pgwrap>.pgbody{flex:1;min-height:0}
+.p1{font-size:10px;border-radius:3px;padding:0 4px;background:#fdf2d0;color:#946200;border:1px solid #f1dc9a;margin-left:4px;font-weight:600;vertical-align:1px}
+.ctxbox{border:1px solid var(--line);border-radius:12px;background:#fcfbf9;margin-bottom:12px;font-size:12.5px}
+.ctxbox .h{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer}
+.ctxbox .g{padding:2px 12px 8px}.ctxbox .g>small{display:block;margin:2px 0 4px}
+.cx{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:12px;padding:1px 4px 1px 9px;margin:0 6px 6px 0;background:#fff;font-size:12px}
+.cx button{border:none;background:none;color:var(--ink3);padding:0 4px;font-size:12px}
+.cx .rl{color:var(--ok);font-size:11px}
+.ev{display:inline-flex;align-items:center;gap:3px;font-size:11px;border-radius:9px;padding:0 7px;background:#eef6f7;color:#0b7285;cursor:pointer;margin-left:6px;border:1px solid #cfe6ea;white-space:nowrap}
+.ev:hover{border-color:#0b7285}.ev.inf{background:#f6f3fe;color:var(--wait);border-color:#e3dafb}
+.form{display:grid;grid-template-columns:70px 1fr;gap:10px 12px;align-items:center;font-size:13px;margin:10px 0}
+.form input,.form select{border:1px solid var(--line);border-radius:8px;padding:5px 9px;outline:none;background:#fff;width:100%}
+.dlg{background:#fff;border-radius:16px;width:520px;max-width:94vw;box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden}
+.dlg .hd{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid var(--line2)}
+.dlg .bd2{padding:14px 18px;max-height:62vh;overflow:auto;font-size:13px}
+.dlg .ft2{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line2);background:#faf9f6}
+.hl{background:#fff3c4;padding:0 2px;border-radius:3px}
+.srcq{border-left:3px solid #0b7285;background:#f4fafb;padding:8px 12px;border-radius:0 8px 8px 0;line-height:1.8}
+.chk{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line2)}
+.bindsug{display:flex;align-items:center;gap:8px;font-size:12.5px;border:1px solid #d6d8fb;background:var(--acc-bg);border-radius:10px;padding:7px 10px;margin-bottom:8px}
+.done-bar{display:flex;align-items:center;gap:8px;border:1px solid #c5e5ce;background:var(--ok-bg);border-radius:10px;padding:8px 12px;font-size:12.5px;margin:12px 0 0}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:0 26px 20px}
+.cal .dh{background:#faf9f6;font-size:11.5px;color:var(--ink3);padding:5px 8px}
+.cal .dc{background:#fff;min-height:84px;padding:4px 6px;font-size:11.5px}
+.cal .dc.o{background:#fbfaf8;color:var(--ink3)}.cal .dc.t .n{background:var(--acc);color:#fff;border-radius:9px;padding:0 6px}
+.cal .ce{display:block;border-radius:4px;padding:1px 5px;margin-top:3px;background:#f3f2ff;color:#3d3a8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal .ce.r{background:#fdecec;color:var(--red)}.cal .ce.s{background:#fff7ea;color:#9a5b00}.cal .ce.d{text-decoration:line-through;opacity:.6}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.seg button{border:none;background:#fff;padding:3px 10px;font-size:12px}.seg button.on{background:var(--ink);color:#fff}
+.vec{font-size:11px;border-radius:9px;padding:0 7px;white-space:nowrap}.vec.y{background:var(--ok-bg);color:var(--ok)}.vec.n{background:var(--fill);color:var(--ink3)}.vec.r{background:var(--acc-bg);color:var(--acc)}
+.set{max-width:760px;margin:0 auto;padding:22px 30px 60px}
+.set h3{font-size:14px;margin:22px 0 8px}
+.set .card{border:1px solid var(--line);border-radius:12px;background:#fff}
+.set .ln{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2);font-size:13px}.set .ln:last-child{border-bottom:none}
+.lock{font-size:11px;color:var(--ink3)}
+.mysrc{font-size:10.5px;color:var(--acc);margin-left:6px}
+
+/* ========== v6：工作台 harness ========== */
+.ws6{display:grid;height:100%;grid-template-columns:248px minmax(0,1fr) var(--rpw,380px)}
+.ws6.rpc{--rpw:44px}.ws6.rpw{--rpw:560px}
+.wl6{border-right:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0}
+.wl6 .sc{flex:1;overflow:auto;padding:6px 8px}
+.si{position:relative}.si .mn{position:absolute;right:6px;top:6px;display:none;border:none;background:#fff;border-radius:6px;padding:0 6px;color:var(--ink3);box-shadow:0 0 0 1px var(--line)}
+.si:hover .mn{display:block}.si .pin{color:var(--warn);font-size:11px;margin-right:3px}
+.ent{border-top:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:2px}
+.ent button{display:flex;align-items:center;gap:10px;border:none;background:none;border-radius:8px;padding:7px 10px;text-align:left;font-size:13px;color:var(--ink)}
+.ent button:hover,.ent button.on{background:#ecebe6}.ent button .i{width:18px;text-align:center}.ent button small{margin-left:auto}
+.mid6{display:flex;flex-direction:column;min-height:0;background:var(--pn)}
+.hd6{padding:12px 22px 10px;border-bottom:1px solid var(--line2)}
+.hd6 h2{margin:0;font-size:16px}
+.modeb{font-size:11px;border-radius:9px;padding:0 8px;background:#eef2ff;color:#3346c4;border:1px solid #d9dffb}
+.goalbar{margin:0 0 12px;border:1px solid #d9dffb;background:#f6f8ff;border-radius:12px;padding:9px 12px;font-size:12.5px}
+.fold{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2);padding:4px 0 10px;cursor:pointer}
+.fold:hover{color:var(--ink)}
+.step .rw{display:none;margin-left:6px;font-size:11px;color:var(--acc);border:none;background:none;padding:0}
+.step:hover .rw{display:inline}
+.nest{margin:6px 0 0 2px;border-left:2px solid #e3dafb;padding-left:10px;font-size:12px;color:var(--ink2)}
+.tbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tbar .opt{cursor:pointer}
+.tbar select{font-size:12px;border:1px solid var(--line);border-radius:12px;padding:1px 6px;background:#fff;color:var(--ink2)}
+.refs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}.refs .cx{background:#f6f8ff;border-color:#d9dffb}
+.qbar{font-size:12px;color:var(--wait);margin:0 0 6px}
+.rp{border-left:1px solid var(--line);background:#faf9f6;display:flex;flex-direction:column;min-height:0;min-width:0}
+.rph{display:flex;align-items:center;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--line)}
+.rph .t{border:none;background:none;padding:6px 10px;font-size:12.5px;color:var(--ink2);border-radius:8px 8px 0 0}
+.rph .t.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ink)}
+.rph .ic{border:none;background:none;color:var(--ink3);padding:4px 6px;border-radius:6px}.rph .ic:hover{background:#ecebe6}
+.rstrip{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0}
+.rstrip button{border:none;background:none;width:34px;height:34px;border-radius:8px;font-size:13px;color:var(--ink2)}
+.rstrip button:hover{background:#ecebe6}
+.rpb{flex:1;overflow:auto;min-height:0;display:flex;flex-direction:column}
+.rpb .hint{font-size:12px;color:var(--ink3);padding:10px 14px 0}
+.pl6{padding:8px 14px}.pl6 .r{display:flex;gap:8px;align-items:flex-start;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line2)}
+.pl6 .r .ck{margin-top:3px}
+.mg{flex:1;overflow:auto;padding:22px 28px}
+.mg h2{margin:0 0 4px;font-size:18px}.mg .sub2{color:var(--ink3);font-size:12.5px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.acard{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:6px}
+.acard .ic2b{width:36px;height:36px;border-radius:10px;background:var(--acc-bg);color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700}
+.appv{max-width:900px}
+.cmpw{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cmpw h4{margin:0 0 6px;font-size:13px}
+.cmpsum{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px}
+
+/* ========== v7：消息多选、事项 ========== */
+.cm .sel{width:18px;height:18px;border-radius:50%;border:1.5px solid #b8b4ab;background:#fff;flex:none;margin-top:22px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+.cm .sel.on{background:var(--acc);border-color:var(--acc)}
+.cm.pick{cursor:pointer;border-radius:10px}.cm.pick:hover{background:#faf9f6}.cm.picked{background:#f3f2ff}
+.msbar{display:flex;align-items:center;gap:8px;border:1.5px solid #d6d8fb;background:#f7f7ff;border-radius:12px;padding:10px 14px;flex-wrap:wrap}
+.msbar b{margin-right:6px}
+.thint{padding:0 26px 8px;font-size:12.5px;color:var(--ink2)}
+.qa2{margin:0 26px 8px;display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:10px;padding:6px 8px 6px 12px;background:#fff}
+.qa2:focus-within{border-color:#a5a0f5}.qa2 input{flex:1;border:none;outline:none;background:none}
+.qa2 select{border:1px solid var(--line);border-radius:8px;padding:2px 6px;font-size:12px;background:#fff;color:var(--ink2)}
+.tr .sc2{font-size:11.5px;color:var(--ink3);margin-left:2px}
+.tr .lt2s{font-size:11px;color:var(--ink3);margin-left:auto;margin-right:6px}
+.tdh{display:flex;gap:8px;margin:12px 0 4px}
+.ctxin{display:flex;gap:6px;align-items:center;border:1px dashed #c9c5bd;border-radius:10px;padding:6px 8px;margin-top:8px;background:#fcfbf9}
+.ctxin input{flex:1;border:none;outline:none;background:none;font-size:13px}
+.ctxsrc{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ctxit{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px}
+.ctxit:last-child{border-bottom:none}.ctxit small{display:block}
+.more{border:1px solid var(--line);border-radius:12px;margin-top:12px}
+.more .h2b{display:flex;align-items:center;padding:10px 14px;cursor:pointer;font-size:12.5px;color:var(--ink2);font-weight:600}
+.more .in2{padding:0 14px 12px}
+.ctxbox2{border:1.5px solid #d6d8fb;background:linear-gradient(#f7f7ff,#fff)}
+
+/* 弹层和提示 */
+.mask{position:fixed;inset:0;background:rgba(20,22,28,.4);display:none;z-index:60;align-items:center;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:#fff;border-radius:16px;width:860px;max-width:94vw;height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden}
+.sheet .hd{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.sheet .bd{overflow:auto;padding:22px;background:#eeece7;flex:1}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;z-index:80;opacity:0;transition:.25s;max-width:80vw;display:flex;gap:10px;align-items:center;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
+.toast button{border:none;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:1px 9px;font-size:12px}
+.guide{position:fixed;left:330px;top:16px;bottom:auto;z-index:50;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px 10px 12px;font-size:12px;color:var(--ink2);box-shadow:0 8px 24px rgba(0,0,0,.08);width:300px}
+.guide b{color:var(--ink)}
+.guide ol{margin:4px 0 0;padding-left:18px}
+.guide li{margin:2px 0}
+.guide .x{position:absolute;right:8px;top:4px;border:none;background:none;color:var(--ink3)}
+.guide.min{width:auto;padding:5px 12px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="win"><header class="tb">
+  <div class="lights"><i></i><i></i><i></i></div><div class="brand"><i>川</i>江川协同 <span class="vtag">原型 v7 · N1 范围</span></div>
+  <div class="gs" data-a="toast" data-x="原型：全局搜索人、群、事项、笔记、资料，以及和分身说过的话">⌕ 搜索人、群、事项、笔记、资料</div>
+  <div class="uinfo"><span class="av sm">陈</span>陈思远 · 数字化部</div>
+</header>
+<div class="body">
+  <nav class="rail" id="rail"></nav>
+  <main class="page" id="page"></main>
+</div></div>
+<div class="mask" id="mask"></div>
+<div class="toast" id="toast"></div>
+<div class="guide" id="guide"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const now = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const NAME = '贾维斯';
+let UID = 100; const uid = p => p + (++UID);
+
+/* ====================== 数据 ====================== */
+const S = {
+  page:'home', inp:{}, dot:false, typing:false, guide:true,
+  home:[],                       // 和分身的那一条连续对话（首页、小球共用）
+  cur:'ys', artTab:'sess', artSel:null, plugOpen:null,
+  tlist:'today', tsel:'t2',
+  chat:'g-xt2', drafts:{},
+  nsel:'n1', nsug:null,
+  folder:'kb-all', fsel:null,
+  tview:'list', ctxOpen:true, bindSug:null, wsOpen:{}, setTab:'av',
+  msel:{ on:false, ids:[] }, tmore:false,
+  wsView:'sess', rp:'art', rpOpen:true, rpWide:false, refs:{}, stepOpen:{}, newMode:'def', memTab:'fact',
+};
+
+const WSP = [
+  { id:'w-ys', name:'2027 预算' }, { id:'w-db', name:'等保迎检' }, { id:'w-2q', name:'二期上线' }, { id:'w-rp', name:'调研与写作' }, { id:'w-def', name:'默认工作区', def:1 },
+];
+const RULES = [
+  { id:'r1', t:'金额差异超过阈值时先问我', th:'10 万', on:true, lock:false, from:'对话 · 11-04' },
+  { id:'r2', t:'要对外发送内容时先问我', on:true, lock:true },
+  { id:'r3', t:'要写入任何系统时先问我', on:true, lock:true },
+];
+const WAYS = [
+  { id:'w0', t:'预算汇总先核对口径', sc:'汇总各科室预算测算时', st:'对照财务通知核对口径 → 汇总 → 差异大时先问相关科室', auto:1 },
+  { id:'w1', t:'写本周周报', sc:'每周五写周报', st:'读本周事项和项目组群 → 按部门模板起草 → 交给你看' },
+  { id:'w2', t:'整理群进展', sc:'项目群讨论多、要汇总时', st:'按事项归类 → 标出谁答应了什么 → 生成摘要' },
+];
+
+const PLUGINS = [
+  { id:'gw', name:'公文写作', from:'集团办公室发布', ico:'文', on:true, sk:['写通知','写请示','公文格式检查'], ex:['公文审核专家'], cn:['集团 OA（P1）'] },
+  { id:'ys', name:'财务预算', from:'内置', ico:'¥', on:true, sk:['预算表核对','测算表汇总'], ex:['预算核对专家'], cn:[] },
+  { id:'db', name:'等保合规', from:'内置', ico:'盾', on:true, sk:['迎检材料清单'], ex:['等保合规专家'], cn:[] },
+  { id:'dy', name:'调研分析', from:'内置', ico:'研', on:true, sk:['写调研报告','竞品对比表'], ex:['行业调研专家'], cn:[] },
+];
+
+const ARTS = {
+  report:{ name:'办公智能体调研报告.md', type:'MD', sess:'rp', time:'11-13 16:20', kind:'report' },
+  v03:{ name:'二期上线方案 v0.3.docx', type:'DOC', sess:'fa', time:'11-13 11:40', kind:'doc' },
+  ys1:{ name:'2027 预算测算汇总表 v1.xlsx', type:'XLS', sess:'ys', time:'今天 09:05', kind:'ys1' },
+};
+
+const SESS = [
+  { id:'ys', ws:'w-ys', title:'2027 预算测算汇总', status:'confirm', time:'今天 09:05', plugins:['财务预算'], from:{ t:'事项', id:'t2', l:'回复李娜：需求测算表 18 号前能否给' },
+    ctx:{ in:[['事项','回复李娜：需求测算表 18 号前能否给'],['聊天','李娜 · 单聊（已绑定）'],['工作区库','5 个科室测算表']], hit:[['文件','关于 2027 年度预算编制工作的通知.pdf','0.92'],['做法','预算汇总先核对口径','0.88'],['笔记','需求测算表（还差硬件报价）','0.81']] },
+    req:'李娜要的需求测算表，帮我把各科室的汇总一下，18 号前给她',
+    steps:[
+      { k:'plan', t:'定计划：收集 → 校验 → 汇总 → 请你确认 → 起草给李娜的消息', s:'done', tm:'11-14 17:02' },
+      { k:'plan', t:'读取工作区库里 5 个科室的测算表', d:'5 份全部收齐', s:'done', tm:'11-14 17:20', ev:[['5 份测算表','f-5ks']] },
+      { k:'skill', t:'技能「预算表核对」：按财务口径逐项校验', d:'对照财务通知第 3 条，发现 2 处口径问题', s:'done', tm:'11-15 09:02', ev:[['财务通知 · 第 3 条','f-tz'],['按以往做法 · 预算汇总先核对口径','way']] },
+      { k:'write', t:'生成汇总表 v1', d:'合计 346.5 万，较 2026 年 +14.2%', s:'done', tm:'11-15 09:05', art:'ys1', ev:[['推断：增幅按 2026 实际 303.4 万计算','inf']] },
+      { k:'confirm', t:'2 处口径和财务通知不一致，等你判断', s:'confirm', cp:'ys' },
+    ], tail:[], arts:['ys1'] },
+  { id:'db', ws:'w-db', title:'等保迎检材料清单', status:'running', time:'刚刚', plugins:['等保合规'],
+    req:'查一下集团今年等保测评通知对迎检材料的要求，整理成清单和分工',
+    ctx:{ in:[['工作区库','2025 等保迎检材料清单.docx']], hit:[['文件','网络安全等级保护管理办法（集团版）.pdf','0.90'],['文件','2026 年度等保测评通知.pdf','0.87']] },
+    steps:[
+      { k:'plan', t:'定计划：找通知 → 对照去年材料 → 专家核对 → 出清单和分工', s:'done', tm:'' },
+      { k:'plan', t:'在个人知识库检索测评通知', d:'找到《2026 年度等保测评通知》，12-05 测评', s:'run', ev:[['测评通知 · 第 2 条','f-dbtz']] },
+      { k:'plan', t:'对照工作区库里的 2025 年迎检材料', d:'42 项中 29 项可沿用，13 项需要新准备', s:'todo', ev:[['2025 迎检材料清单','doc-dbqd']] },
+      { k:'expert', t:'专家「等保合规专家」：对照三级要求核对', d:'清单齐全；《应急演练记录》建议补部门负责人签字', s:'todo' },
+      { k:'write', t:'生成迎检材料清单与分工', d:'42 项 · 按岗位建议了 4 位负责人', s:'todo', art:'db1', artName:'等保迎检材料清单与分工.xlsx', artType:'XLS', artKind:'db1' },
+    ], tail:[], arts:[],
+    end:{ h:'清单好了：42 项，13 项要新准备，已按岗位建议了分工。其中 4 项需要跟进，要建成事项吗？你勾选后再建。', acts:[['勾选建成事项','dbShare'],['先不建','noop']] } },
+  { id:'rp', ws:'w-rp', title:'办公智能体调研报告', status:'done', time:'11-13', plugins:['调研分析'],
+    req:'帮我写一份办公智能体调研报告：国内外主要产品、典型场景、政企落地难点，给部门内部参考，5000 字左右',
+    steps:[
+      { k:'plan', t:'定提纲：6 章（摘要、产品格局、典型场景、落地难点、建议、来源）', s:'done', tm:'16:12' },
+      { k:'plan', t:'检索个人知识库：你的资料 3 份', s:'done', tm:'16:15', ev:[['资料 3 份','f-gw']] },
+      { k:'expert', t:'专家「行业调研专家」：交叉核对产品对比', s:'done', tm:'16:18' },
+      { k:'write', t:'写成报告', d:'约 5200 字，引用来源 17 处', s:'done', tm:'16:20', art:'report' },
+    ], tail:[{ r:'ai', h:'写好了。表里的产品只作类型示例，正式引用前建议再核实一遍。' }], arts:['report'] },
+  { id:'fa', ws:'w-2q', title:'二期上线方案 v0.3 修改', status:'done', time:'11-13', plugins:['公文写作'],
+    req:'把王主任对方案的意见改进 v0.3',
+    steps:[
+      { k:'plan', t:'读取王主任 3 条意见', s:'done', tm:'11:20' },
+      { k:'skill', t:'技能「公文格式检查」', s:'done', tm:'11:35' },
+      { k:'write', t:'改出 v0.3', d:'2 条已改，1 条要等测试结论', s:'done', tm:'11:40', art:'v03' },
+    ], tail:[], arts:['v03'] },
+];
+
+const CP = {
+  ys:{ q:'2 处口径和财务通知不一致', why:'合计影响 +34.5 万，超过你设的"差异超过 10 万要问我"',
+    body:`<table><tr><th>科室</th><th>项目</th><th>填报</th><th>问题</th></tr>
+      <tr><td>运维科</td><td>服务器维保</td><td>46.0 万</td><td class="fl">含 2026 年延续合同 34.0 万，通知要求只报新增</td></tr>
+      <tr><td>应用科</td><td>低代码平台许可</td><td>18.5 万</td><td class="fl">应列入"软件许可"，填在了"新建项目"</td></tr></table>`,
+    ev:[['财务通知 · 第 3 条','f-tz'],['运维科测算表 · 第 4 行','f-5ks']],
+    opts:[['ask','先问这两个科室（我起草，你来发）',1],['raw','按原数报送',0]] },
+};
+
+// 事项：d = 11 月的日（>30 表示 12 月），今天是 11-16 周一
+const TASKS = [
+  { id:'t1', title:'周例会汇报二期进展 10:00', d:16, list:'二期上线', p:3, src:{ t:'note', id:'n2', l:'笔记 · 11-13' } },
+  { id:'t2', title:'回复李娜：需求测算表 18 号前能否给', d:16, list:'2027 预算', p:2, fs:'ys', src:{ t:'im', id:'c-lina', l:'李娜 · 单聊' }, bind:['c-lina'], ctx:[['消息','李娜：数字化部的需求测算表 18 号前能给我吗？'],['笔记','需求测算表还差硬件报价，等华信']], sub:[{ t:'汇总 5 个科室测算表', d:17 },{ t:'核对财务口径', d:17 }] },
+  { id:'t3', title:'整理硬件采购需求', d:19, list:'2027 预算', p:1, src:{ t:'note', id:'n4', l:'笔记 · 需求测算表' } },
+  { id:'t4', title:'刘洋 · 测试报告', d:13, list:'二期上线', p:2, wait:'刘洋', src:{ t:'im', id:'g-xt2', l:'项目组群' }, bind:['g-xt2'] },
+  { id:'t5', title:'方案给王建国看', d:19, list:'二期上线', p:3, src:{ t:'im', id:'c-wang', l:'王建国 · 单聊' } },
+  { id:'t6', title:'周敏 · 供应商合同', d:20, list:'二期上线', p:1, wait:'周敏', src:{ t:'im', id:'g-xt2', l:'项目组群' } },
+  { id:'t7', title:'确认收到合同盖章版', d:20, list:'二期上线', p:1, src:{ t:'note', id:'n1', l:'笔记 · 今天' } },
+  { id:'t8', title:'写本周周报', d:20, list:'收件箱', p:1, rep:'每周五', src:{ t:'me', l:'手动添加' } },
+  { id:'t9', title:'等保迎检材料准备', d:35, list:'等保迎检', p:2, fs:'db', src:{ t:'fs', l:'对话 · 11-15' } },
+  { id:'t10', title:'整理 10 月部门月报', d:3, list:'收件箱', p:1, done:true, ctx:[['文件','10 月部门月报.docx'],['背景','王主任要求月报加一页风险']] },
+];
+const LISTS = ['二期上线','2027 预算','等保迎检'];
+
+const CHATS = [
+  { id:'g-xt2', g:1, n:'协同办公二期项目组', sub:'8 人', ai:1, un:2, tm:'周五', msgs:[
+    { day:'11月12日 周四' },
+    { me:1, t:'10:12', x:'上线方案这周要定稿：@刘洋 测试报告 13 号前给我，@李娜 预算确认表帮忙核一下，@周敏 供应商合同跟进一下' },
+    { me:1, t:'10:13', card:'xt' },
+    { f:'李娜', t:'16:40', file:'xls-budget' },
+    { day:'11月13日 周五' },
+    { id:'m-liuy', f:'刘洋', t:'17:21', x:'测试环境周四又挂了一次，报告可能要晚两天' },
+    { id:'m-zm', f:'周敏', t:'17:40', x:'合同法务那边在审，下周给结果' } ] },
+  { id:'c-lina', n:'李娜', sub:'财务部 · 预算专员', un:1, tm:'周五', srt:'等你回复', msgs:[
+    { day:'11月13日 周五' },
+    { id:'m-lina', f:'李娜', t:'14:05', x:'思远，数字化部的需求测算表 18 号前能给我吗？我这边 25 号要汇总' } ] },
+  { id:'g-hx', g:1, n:'协同办公二期 · 华信对接群', sub:'5 人 · 含外部', ai:1, tm:'周五', msgs:[
+    { day:'11月13日 周五' }, { id:'m-wk', f:'吴凯（外部）', ext:1, t:'10:30', x:'培训排期 12 月 1 日前给我们，我们好安排讲师' } ] },
+  { id:'c-wang', n:'王建国', sub:'数字化部 · 主任', tm:'周四', srt:'等你办', msgs:[
+    { day:'11月12日 周四' }, { id:'m-wang', f:'王建国', t:'18:02', x:'方案周四前给我看一下' } ] },
+  { id:'c-zw', n:'张伟', sub:'运维科', tm:'周四', msgs:[{ day:'11月12日 周四' },{ f:'张伟', t:'09:12', x:'维保测算表已经交到预算群了' }] },
+  { id:'c-st', n:'孙婷', sub:'应用科', tm:'周四', msgs:[{ day:'11月12日 周四' },{ f:'孙婷', t:'10:40', x:'低代码平台的报价单我发你邮箱了' }] },
+  { id:'g-ys', g:1, n:'2027 年预算编制协调群', sub:'12 人', ai:1, tm:'周四', msgs:[
+    { day:'11月12日 周四' }, { f:'李娜', t:'09:30', x:'各部门 25 号前交测算，模板见群文件' } ] },
+  { id:'g-szb', g:1, n:'数字化部工作群', sub:'23 人', ai:0, tm:'周三', msgs:[
+    { day:'11月11日 周三' }, { f:'王建国', t:'15:00', x:'本周五下午部门例会' } ] },
+];
+
+CHATS.forEach(c => c.msgs.forEach((m, i) => { if (!m.day && !m.id) m.id = c.id + '-m' + i; }));
+const NOTES = [
+  { id:'n1', title:'合同盖章版', body:'华信说合同盖章版周五寄到，记得确认收到。\n顺便问下周敏法务审核意见有没有改动。', time:'今天 08:12', src:'记一条' },
+  { id:'n2', title:'周例会要汇报', body:'周一 10 点例会要汇报二期进展，重点讲测试和预算。王主任上次关心回退方案。', time:'11-13 16:30', src:'记一条' },
+  { id:'n3', title:'项目组群 · 本周要点', body:'- 刘洋：测试环境周四又挂了，报告可能晚两天\n- 李娜交付了《2027 预算确认表》\n- 周敏：合同在法务审，下周给结果', time:'11-13 18:30', src:'来自聊天' },
+  { id:'n4', title:'需求测算表', body:'需求测算表还差硬件报价，等华信。先给李娜不含硬件的一版。', time:'11-12 11:05', src:'记一条' },
+];
+
+const FILES = [
+  { id:'f-tz', name:'关于 2027 年度预算编制工作的通知.pdf', type:'PDF', folder:'kb-ys', from:'上传', time:'11-04', kind:'tz', vec:'y' },
+  { id:'f-kj', name:'预算核对口径说明.docx', type:'DOC', folder:'kb-ys', from:'上传', time:'11-04', kind:'doc', vec:'y' },
+  { id:'f-gw', name:'集团公文格式规范（2026 版）.pdf', type:'PDF', folder:'kb-zd', from:'上传', time:'10-09', kind:'doc', vec:'y' },
+  { id:'f-db', name:'网络安全等级保护管理办法（集团版）.pdf', type:'PDF', folder:'kb-zd', from:'上传', time:'03-01', kind:'doc', vec:'y' },
+  { id:'f-dbtz', name:'2026 年度等保测评通知.pdf', type:'PDF', folder:'kb-zd', from:'上传', time:'11-10', kind:'dbtz', vec:'y' },
+  { id:'f-cl', name:'差旅费管理办法.pdf', type:'PDF', folder:'kb-zd', from:'上传', time:'01-01', kind:'doc', vec:'n' },
+  { id:'xls-budget', name:'2027 预算确认表.xlsx', type:'XLS', folder:'kb-ys', from:'从聊天保存 · 李娜', time:'11-12', kind:'budget', vec:'r' },
+  { id:'f-5ks', name:'5 个科室测算表.zip', type:'XLS', folder:'w-ys', from:'上传', time:'11-14', kind:'ks5', vec:'y' },
+  { id:'doc-dbqd', name:'2025 等保迎检材料清单.docx', type:'DOC', folder:'w-db', from:'上传', time:'11-11', kind:'doc', vec:'y' },
+];
+const KBF = [['kb-all','全部文件'],['kb-zd','制度规范'],['kb-ys','预算资料']];
+const KBAUTO = { 'kb-zd':true, 'kb-ys':true };
+
+/* ====================== 工具 ====================== */
+const sess = id => SESS.find(s => s.id === id);
+const task = id => TASKS.find(t => t.id === id);
+const chat = id => CHATS.find(c => c.id === id);
+const note = id => NOTES.find(n => n.id === id);
+const val = id => S.inp[id] || '';
+const take = id => { const v = (S.inp[id] || '').trim(); S.inp[id] = ''; return v; };
+const wd = d => '一二三四五六日'[((d - 16) % 7 + 7) % 7];
+const dlabel = d => d == null ? '' : d < 16 ? `逾期 · 11-${pad(d)}` : d === 16 ? '今天' : d === 17 ? '明天' : `${d > 30 ? 12 : 11}-${pad(d > 30 ? d - 30 : d)} 周${wd(d)}`;
+const sessStat = s => {
+  const n = s.steps.filter(x => x.s === 'done').length, cur = s.steps.find(x => x.s !== 'done');
+  if (s.status === 'done') return `已完成 · 产物 ${s.arts.length} 份`;
+  if (s.status === 'wait') return cur?.wt ? '等回复：' + cur.wt : '等你确认目标是否达成';
+  if (s.status === 'plan') return `计划待确认 · ${s.steps.length} 步`;
+  if (s.status === 'confirm') return '等你确认：' + (CP[cur?.cp]?.q || cur?.t || '');
+  return `执行中 ${n}/${s.steps.length} · ${cur ? cur.t.replace(/^.*?：/, '') : ''}`;
+};
+function allFiles(){
+  return Object.entries(ARTS).map(([id, a]) => ({ id, name:a.name, type:a.type, folder:sess(a.sess)?.ws || 'w-def', from:'产物 · ' + (sess(a.sess)?.title || ''), time:a.time, kind:a.kind, art:1, vec:'y' })).reverse().concat(FILES);
+}
+const wsp = id => WSP.find(w => w.id === id);
+const EVID = {
+  'f-tz':{ n:'关于 2027 年度预算编制工作的通知.pdf · 第 3 条', q:'各部门测算<span class="hl">只报 2027 年新增需求，已签订的延续合同不重复列报</span>；软件类采购统一列入「软件许可」科目。' },
+  'f-5ks':{ n:'5 个科室测算表.zip · 运维科 · 第 4 行', q:'服务器维保　46.0 万　备注：<span class="hl">含 2026 年延续合同 34.0 万</span>' },
+  'f-dbtz':{ n:'2026 年度等保测评通知.pdf · 第 2 条', q:'测评时间为 <span class="hl">12 月 5 日</span>，各单位须在 11 月 30 日前备齐迎检材料。' },
+  'doc-dbqd':{ n:'2025 等保迎检材料清单.docx', q:'共 42 项……<span class="hl">安全管理制度、机房出入记录、应急演练记录</span>……' },
+  'f-gw':{ n:'个人知识库 · 3 份资料', q:'《集团公文格式规范》等 3 份资料中与「办公智能体」相关的段落。' },
+  'n4':{ n:'笔记 · 需求测算表（11-12）', q:'需求测算表<span class="hl">还差硬件报价，等华信</span>。先给李娜不含硬件的一版。' },
+  'way':{ n:'按以往做法 · 预算汇总先核对口径', q:'这是分身从你 2026 年 3 次预算汇总中<span class="hl">自动沉淀的做法</span>：先对照财务通知核对口径，再汇总，差异大时先问相关科室。可以在「分身记得的」→「做法」里修改或删除。' },
+  'inf':{ n:'分身的推断', q:'这是根据汇总表合计 346.5 万和 2026 年实际 303.4 万<span class="hl">推算</span>出来的，不是原文写明的数字。', inf:1 },
+};
+const evHtml = ev => (ev || []).map(([l, k]) => `<span class="ev ${k === 'inf' ? 'inf' : ''}" data-a="evOpen" data-x="${k}">${k === 'inf' ? '推断' : '依据'} · ${esc(l.replace(/^推断：/, ''))}</span>`).join('');
+const fileById = id => allFiles().find(f => f.id === id);
+const extIco = t => `<span class="ext ${t}">${t}</span>`;
+
+/* ====================== 产物渲染 ====================== */
+function artBody(kind, name){
+  const ph = n => Array.from({ length:n }, (_, i) => `<span class="ph" style="width:${[92,80,86,64,74][i % 5]}%"></span>`).join('');
+  if (kind === 'report') return `<div class="paper"><h1>办公智能体调研报告</h1><blockquote>${NAME}起草 · 2026-11-13 · 依据公开资料 14 篇、你的资料 3 份；产品对比经"行业调研专家"核对</blockquote>
+    <h2>一、摘要</h2><p>办公智能体是能理解工作上下文、替人完成多步骤办公工作的 AI 助手。和只回答问题的聊天助手相比，它能读文件和系统、按步骤执行，最后交付文档、表格和演示文稿。</p>
+    <p>对政企客户，能否用起来关键在三件事：数据能不能留在内网、权限会不会超过本人、出了错谁负责。</p>
+    <h2>二、产品格局</h2><table><tr><th>类型</th><th>特点</th><th>政企落地看什么</th></tr><tr><td>办公套件内置</td><td>嵌在文档、表格、邮件里</td><td>私有化和信创适配</td></tr><tr><td>协同平台内置</td><td>贴着聊天、审批、日程</td><td>平台本身是否已在用</td></tr><tr><td>独立办公智能体</td><td>自主规划、多步骤执行</td><td>数据安全审查</td></tr></table>
+    <h2>三、典型场景</h2>${ph(3)}<h2>四、政企落地难点</h2>${ph(4)}<h2>五、建议</h2>${ph(3)}</div>`;
+  if (kind === 'ys1' || kind === 'ys2'){
+    const v2 = kind === 'ys2';
+    const r = [['运维科','服务器维保', v2 ? '12.0' : '46.0', v2 ? 'fx' : 'fl'],['运维科','机房改造','58.0',''],['应用科', v2 ? '低代码平台许可（软件许可）' : '低代码平台许可（新建项目）','18.5', v2 ? 'fx' : 'fl'],['应用科','二期平台建设','120.0',''],['网络科','等保测评','26.0',''],['网络科','硬件更新','待华信报价',''],['数据科','数据治理','52.0',''],['综合科','软件许可','26.0','']];
+    return `<table class="xls"><tr><th></th><th>科室</th><th>项目</th><th>2027 测算（万元）</th></tr>${r.map((x, i) => `<tr><th>${i + 1}</th><td>${x[0]}</td><td>${x[1]}</td><td class="${x[3]}">${x[2]}</td></tr>`).join('')}<tr><th></th><td colspan="2"><b>合计</b></td><td><b>${v2 ? '312.5' : '346.5'}</b></td></tr></table>
+      <p style="text-align:center;font-size:12px;color:var(--ink3)">${v2 ? '绿色：已按科室回复修正' : '橙色：和财务口径不一致'}</p>`;
+  }
+  if (kind === 'budget') return `<table class="xls"><tr><th></th><th>项目</th><th>2026 实际</th><th>2027 测算</th><th>变化</th></tr>${[['协同办公二期','86.0','120.0','+34.0'],['等保测评','24.0','26.0','+2.0'],['硬件更新','40.0','待华信报价',''],['软件许可','31.5','33.0','+1.5']].map((x, i) => `<tr><th>${i + 1}</th>${x.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`;
+  if (kind === 'db1') return `<table class="xls"><tr><th>#</th><th>材料</th><th>状态</th><th>建议负责人</th><th>期限</th></tr>${[['安全管理制度（修订版）','需更新','周敏','11-28'],['机房出入记录（近 1 年）','沿用','刘洋','11-25'],['应急演练记录','需补签字','刘洋','11-28'],['渗透测试报告','需新做','吴凯（外部）','11-30'],['网络拓扑图','需更新','赵磊','11-26'],['资产清单','沿用','赵磊','11-26']].map((x, i) => `<tr><th>${i + 1}</th>${x.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}<tr><td colspan="5" style="color:var(--ink3)">…共 42 项</td></tr></table>`;
+  if (kind === 'ppt') return `<div class="slides">${['二期上线进展 · 周例会汇报','本周完成','进行中：测试、合同','风险和应对','上线范围和时间','需要协调的事项'].map((t, i) => `<div class="slide"><b>${t}</b>${ph(2)}<i>${i + 1}</i></div>`).join('')}</div>`;
+  if (kind === 'xls') return `<table class="xls"><tr><th></th><th>A</th><th>B</th><th>C</th></tr>${[1,2,3,4,5].map(i => `<tr><th>${i}</th><td>—</td><td>—</td><td>—</td></tr>`).join('')}</table>`;
+  return `<div class="paper"><h3>${esc((name || '').replace(/\.\w+$/, ''))}</h3>${ph(5)}<h2> </h2>${ph(4)}<h2> </h2>${ph(3)}</div>`;
+}
+
+/* ====================== 渲染 ====================== */
+function render(){
+  const a = document.activeElement, keep = a && a.id && a.dataset.keep !== undefined ? { id:a.id, s:a.selectionStart } : null;
+  const sc = {}; document.querySelectorAll('[data-sc]').forEach(e => sc[e.dataset.sc] = e.scrollTop);
+  renderRail();
+  $('#page').innerHTML = ({ home:pHome, ws:pWs, tasks:pTasks, im:pIm, notes:pNotes, lib:pLib, set:pSet, mem:pMem })[S.page]() + dotHtml();
+  document.querySelectorAll('[data-sc]').forEach(e => { if (sc[e.dataset.sc] != null) e.scrollTop = sc[e.dataset.sc]; });
+  document.querySelectorAll('[data-bottom]').forEach(e => e.scrollTop = e.scrollHeight);
+  if (keep){ const e = document.getElementById(keep.id); if (e){ e.focus(); try { e.setSelectionRange(keep.s, keep.s); } catch(_){} } }
+  renderGuide();
+}
+
+function renderRail(){
+  const running = SESS.some(s => s.status === 'running'), conf = SESS.filter(s => s.status === 'confirm').length;
+  const today = TASKS.filter(t => !t.done && t.d != null && t.d <= 16).length;
+  const un = CHATS.reduce((n, c) => n + (c.un || 0), 0);
+  const it = (k, ico, l, extra = '') => `<button class="${S.page === k || (k === 'home' && S.page === 'mem') ? 'on' : ''}" data-a="go" data-x="${k}">${ico}${l}${extra}</button>`;
+  $('#rail').innerHTML =
+    it('home', `<span class="ic"><span class="orb ${running ? 'busy' : ''}"></span></span>`, NAME)
+    + it('ws', '<span class="ic">⌘</span>', '工作台', conf ? `<span class="bd o">${conf}</span>` : running ? '<span class="rrun"><i class="spin" style="width:9px;height:9px;border-width:1.5px"></i></span>' : '')
+    + it('tasks', '<span class="ic">☑</span>', '事项', today ? `<span class="bd g">${today}</span>` : '')
+    + it('im', '<span class="ic">💬</span>', '消息', un ? `<span class="bd">${un}</span>` : '')
+    + '<hr>'
+    + it('notes', '<span class="ic">✎</span>', '笔记')
+    + it('lib', '<span class="ic">▤</span>', '资料')
+    + '<span class="sp"></span>'
+    + it('set', '<span class="ic">⚙</span>', '设置');
+}
+
+function comp(id, ph, act, opts = {}){
+  return `<div class="comp ${opts.sm ? 'sm' : ''}">${opts.top || ''}<textarea id="${id}" data-keep data-enter="${act}" placeholder="${esc(ph)}">${esc(val(id))}</textarea>
+    <div class="ct">${opts.sm && !opts.tools ? '' : `<button class="plus" data-a="toast" data-x="原型：上传附件，或引用事项、资料库文件、笔记">＋</button><span class="opt" data-a="toast" data-x="原型：@ 引用事项、文件、聊天、笔记">@ 引用</span>`}${opts.extra || ''}<span class="grow"></span><button class="send" data-a="${act}">↑</button></div></div>`;
+}
+
+/* ---------- 首页 ---------- */
+function msgHtml(m){
+  if (m.r === 'me') return `<div class="m me"><div class="bb">${m.h}</div></div>`;
+  const cards = (m.cards || []).map(c => {
+    if (c.sess){ const s = sess(c.sess); return `<div class="scard" data-a="go" data-x="ws:${s.id}"><span class="orb xs ${s.status === 'running' ? 'busy' : ''}"></span><div class="grow"><b>工作台 · ${esc(s.title)}</b><small>${s.status === 'running' ? '<i class="spin" style="width:9px;height:9px;border-width:1.5px"></i> ' : ''}${esc(sessStat(s))}</small></div><span class="mut">→</span></div>`; }
+    return '';
+  }).join('');
+  const acts = m.acts ? `<div class="acts">${m.acts.map(([l, a, x], i) => `<button class="btn sm ${i === 0 ? 'pri' : ''}" data-a="${a}" data-x="${esc(x || '')}">${l}</button>`).join('')}</div>` : '';
+  return `<div class="m ai"><span class="orb md"></span><div class="bb"><div class="w">${NAME}${m.tm ? ' · ' + m.tm : ''}</div>${m.h}${m.brief ? briefHtml() : ''}${m.pre ? preHtml(m.pre) : ''}${cards}${acts}</div></div>`;
+}
+/* 预填卡片：分身预填，人确认后才生效 */
+S.pre = {};
+const LOPTS = () => ['收件箱', ...LISTS];
+function dOpts(sel){ return [[null,'无日期'],[16,'今天'],[17,'明天'],[18,'11-18 周三'],[19,'11-19 周四'],[20,'11-20 周五'],[23,'11-23 周一'],[27,'11-27 周五']].map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join(''); }
+function preHtml(id){
+  const p = S.pre[id]; if (!p) return '';
+  if (p.st === 'ok') return `<div class="scard" style="cursor:default"><span class="tag ok">已建成</span><div class="grow">${p.kind === 'note' ? '笔记' : '事项'}「${esc(p.title)}」</div><button class="btn sm" data-a="go" data-x="${p.kind === 'note' ? 'note' : 'task'}:${p.rid}">查看</button></div>`;
+  if (p.st === 'no') return `<div class="scard" style="cursor:default"><span class="tag">已取消</span><div class="grow mut">没有创建任何${p.kind === 'note' ? '笔记' : '事项'}</div></div>`;
+  const f = p.kind === 'note'
+    ? `<div class="form"><span class="mut">标题</span><input id="pre-t-${id}" data-keep value="${esc(val('pre-t-' + id) || p.title)}"><span class="mut">内容</span><input id="pre-b-${id}" data-keep value="${esc(val('pre-b-' + id) || p.body)}"></div>`
+    : `<div class="form"><span class="mut">标题</span><input id="pre-t-${id}" data-keep value="${esc(val('pre-t-' + id) || p.title)}"><span class="mut">期限</span><select id="pre-d-${id}">${dOpts(p.d)}</select><span class="mut">清单</span><select id="pre-l-${id}">${LOPTS().map(l => `<option ${l === p.list ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="mut">来源</span><span>${esc(p.src.l)}</span>${p.bind ? `<span class="mut">绑定</span><label><input type="checkbox" id="pre-bd-${id}" checked style="width:auto"> 绑定「${esc(chat(p.bind).n)}」，后续消息由分身跟踪</label>` : ''}</div>`;
+  return `<div class="brief" style="padding:10px 14px"><div class="row"><span class="tag ai">预填 · ${p.kind === 'note' ? '笔记' : '事项'}</span><small>改好后点确认才会创建</small></div>${f}<div class="acts" style="margin-top:0"><button class="btn sm pri" data-a="preOk" data-x="${id}">确认${p.kind === 'note' ? '保存' : '建成'}</button><button class="btn sm" data-a="preNo" data-x="${id}">取消</button></div></div>`;
+}
+function newPre(p){ const id = uid('p'); S.pre[id] = Object.assign({ st:'open' }, p); return id; }
+/* 弹窗版预填（从消息、笔记、文件、产物里建成事项） */
+function preDlg(p){
+  const id = newPre(p);
+  $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><span class="orb xs"></span><b class="grow">建成事项</b><small>分身已预填，改好后确认</small></div><div class="bd2">${p.ctx ? `<div class="quote">${esc(p.ctx)}</div>` : ''}<div id="pre-dlg">${preHtml(id).replace(/<div class="acts"[\s\S]*$/, '</div>')}</div></div>
+    <div class="ft2"><button class="btn" data-a="preNo" data-x="${id}">取消</button><button class="btn pri" data-a="preOk" data-x="${id}">确认建成</button></div></div>`;
+  $('#mask').classList.add('on');
+}
+function addToDlg(ctx, src, items){
+  S.addCtx = { ctx, src, items };
+  $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><b class="grow">加到事项</b><small>这段内容会作为一条上下文放进事项</small></div><div class="bd2"><div class="quote">${esc(ctx)}</div>
+    ${TASKS.filter(t => !t.done).map(t => `<div class="chk" data-a="addToOk" data-x="${t.id}" style="cursor:pointer"><span class="grow">${esc(t.title)}</span><small>${t.list}</small></div>`).join('')}</div><div class="ft2"><button class="btn" data-a="closeMask">取消</button></div></div>`;
+  $('#mask').classList.add('on');
+}
+const typingHtml = () => S.typing ? `<div class="m ai"><span class="orb md busy"></span><div class="bb"><div class="typing" style="padding-top:10px"><span></span><span></span><span></span></div></div></div>` : '';
+
+function briefHtml(){
+  const lina = chat('c-lina').replied, ys = sess('ys'), db = sess('db');
+  const rows = [
+    [ys.status === 'confirm' ? '<span class="tag warn">等你确认</span>' : '<span class="tag ok">已处理</span>', '预算汇总有 2 处口径和财务通知不一致', [['去确认', 'go', 'ws:ys']], ys.status !== 'confirm'],
+    ['<span class="tag warn">等你回复</span>', '李娜问需求测算表 18 号前能不能给', lina ? [] : [['去看', 'go', 'im:c-lina']], lina],
+    ['<span class="tag">今天 10:00</span>', '周例会汇报二期进展', [['开会话做 PPT', 'newPpt']], false],
+    ['<span class="tag wait">你在等</span>', '刘洋 · 测试报告已逾期', [['看事项', 'go', 'task:t4']], false],
+    [db.status === 'done' ? '<span class="tag ok">办完了</span>' : '<span class="tag ai">在办</span>', '等保迎检材料清单 · ' + sessStat(db).split(' · ')[0], [['去工作台', 'go', 'ws:db']], false],
+  ];
+  return `<div class="brief"><div class="h">晨报 · 今天 11月16日 周一<span class="p1">P1</span> <small style="font-weight:400">首版打开对话时显示；定时推送在 P1</small></div>${rows.map(([tg, tx, acts, dn]) => `<div class="r ${dn ? 'done' : ''}">${tg}<span class="tx grow">${tx}</span>${acts.map(([l, a, x]) => `<button class="btn sm" data-a="${a}" data-x="${x || ''}">${l}</button>`).join('')}</div>`).join('')}</div>`;
+}
+
+function pHome(){
+  const SUG = ['今天有什么要处理的','帮我写一份办公智能体调研报告','记一下：合同盖章版周五寄到','提醒我周四前把方案给王主任','帮我回王主任'];
+  if (!S.home.length){
+    const conf = SESS.filter(s => s.status === 'confirm').length, run = SESS.filter(s => s.status === 'running').length;
+    const un = CHATS.reduce((n, c) => n + (c.un || 0), 0), today = TASKS.filter(t => !t.done && t.d <= 16).length;
+    return `<div class="home"><div class="hero">
+      <span class="orb lg ${run ? 'busy' : ''}"></span>
+      <h1>思远，早上好</h1>
+      <p>我是你的分身${NAME}。在这里给我下指令：要办的事我会开会话去办，要记的、要提醒的我预填好给你确认。<a href="#" data-a="go" data-x="mem" style="color:var(--acc)">看看我记得什么</a></p>
+      ${comp('home-in', '交代一件事，或者问点什么……', 'homeSend')}
+      <div class="chips">${SUG.map(s => `<button data-a="say" data-x="${s}">${s}</button>`).join('')}</div>
+      <div class="tcards">
+        <div class="tcard" data-a="go" data-x="ws"><div class="k">⌘ 工作台</div><div class="v">${conf ? `<b>${conf} 件</b>等你确认 · ` : ''}${run} 件在办</div></div>
+        <div class="tcard" data-a="go" data-x="im:c-lina"><div class="k">💬 消息</div><div class="v"><b>${un} 条</b>未读 · 李娜在等你回</div></div>
+        <div class="tcard" data-a="go" data-x="tasks"><div class="k">☑ 事项</div><div class="v">今天 ${today} 件 · <b>1 件</b>逾期</div></div>
+      </div></div></div>`;
+  }
+  return `<div class="home"><div class="thread" data-bottom><div class="thead"><span class="orb"></span><b>${NAME}</b><small class="grow">陈思远的分身 · 一条连续的对话：你下指令，我分派到各模块，结果回到这里</small><button class="btn sm" data-a="go" data-x="mem">分身记得的</button></div>
+      <div class="tin">${S.home.map(msgHtml).join('')}${typingHtml()}</div></div>
+    <div class="dock"><div class="chips" style="max-width:760px">${SUG.slice(0, 3).map(s => `<button data-a="say" data-x="${s}">${s}</button>`).join('')}</div>${comp('home-in', '接着说……', 'homeSend')}</div></div>`;
+}
+
+/* ---------- 小球 ---------- */
+function ctxNow(){
+  if (S.page === 'ws') return S.cur ? '工作台 · ' + sess(S.cur).title : '工作台';
+  if (S.page === 'tasks') return S.tsel ? '事项 · ' + task(S.tsel).title : '事项';
+  if (S.page === 'im') return '和「' + chat(S.chat).n + '」的聊天';
+  if (S.page === 'notes') return '笔记 · ' + (note(S.nsel)?.title || '');
+  if (S.page === 'lib') return S.fsel ? '资料 · ' + fileById(S.fsel).name : '资料库';
+  return '';
+}
+function dotHtml(){
+  if (S.page === 'home') return '';
+  const conf = SESS.filter(s => s.status === 'confirm').length, run = SESS.some(s => s.status === 'running');
+  const btn = `<button class="dot" data-a="dot"><span class="orb ${run ? 'busy' : ''}"></span>${conf && !S.dot ? `<span class="bd">${conf}</span>` : ''}<span class="tip">问${NAME} · ⌘J</span></button>`;
+  if (!S.dot) return btn;
+  return btn + `<div class="dpop" data-stop>
+    <div class="hd"><span class="orb md"></span><div class="grow"><b>${NAME}</b><br><small>和首页是同一条对话</small></div><button class="btn sm" data-a="go" data-x="home">在首页打开</button><button class="btn sm" data-a="dot">✕</button></div>
+    <div class="ctx">◉ 正在看：${esc(ctxNow())}</div>
+    <div class="ms" data-bottom>${S.home.length ? S.home.slice(-8).map(msgHtml).join('') : `<div class="m ai"><span class="orb md"></span><div class="bb"><div class="w">${NAME}</div>我能看到你正在看的内容。要我做什么？</div></div>`}${typingHtml()}</div>
+    <div class="ft">${comp('dot-in', '关于正在看的，问我或交代我……', 'dotSend', { sm:1 })}</div></div>`;
+}
+
+/* ---------- 工作台 ---------- */
+function stepHtml(st, s, idx){
+  const ic = { done:'✓', run:'<i class="spin"></i>', todo:'', confirm:'!', wait:'…' }[st.s];
+  const kl = { plan:'计划', conn:'连接器', expert:'专家', skill:'技能', write:'生成', wait:'等回复', im:'起草消息', confirm:'确认点' }[st.k];
+  let extra = '';
+  if (st.s === 'confirm'){ const c = CP[st.cp]; extra = `<div class="cp"><div class="q">确认点 · ${c.q}</div><div class="why">为什么停下：${c.why}</div>${c.body}<div style="margin:-4px 0 8px">${evHtml(c.ev)}</div><div class="acts">${c.opts.map(([k, l, p]) => `<button class="btn ${p ? 'pri' : ''}" data-a="cp" data-x="${s.id}" data-y="${k}">${l}</button>`).join('')}<button class="btn lk" data-a="openArt" data-x="ys1">先看看表</button></div><label style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:12.5px"><input type="checkbox" id="cpk-${s.id}"> 以后都这样处理（记成你的规则，可在「分身记得的」里改）</label></div>`; }
+  if (st.s === 'wait') extra = `<div class="cp" style="border-color:#dcd0fb;background:#faf8ff"><div class="q">等回复 · ${esc(st.wt || '')}</div><div class="why">${(st.sent || []).length ? '回复会通过事项绑定的聊天传回来，收到后从这一步继续。' : '草稿已放进对应聊天的输入框，等你本人发送'}</div><div class="acts">${(st.chats || []).map(c => `<button class="btn sm" data-a="go" data-x="im:${c}">去「${esc(chat(c).n)}」${(st.sent || []).includes(c) ? ' ✓ 已发送' : ''}</button>`).join('')}</div></div>`;
+  if (st.s === 'planned') extra = '';
+  if (st.k === 'expert' && st.s === 'done') extra += `<div class="nest">专家「${esc(st.t.replace(/^.*「|」.*$/g, ''))}」· 核对了 3 处关键内容，未发现问题</div>`;
+  if (st.art && st.s === 'done' && ARTS[st.art]) extra += `<div><span class="achip" data-a="artSel" data-x="${st.art}">${extIco(ARTS[st.art].type)}${esc(ARTS[st.art].name)}</span></div>`;
+  const rw = st.s === 'done' && s.status !== 'running' ? `<button class="rw" data-a="rewind" data-x="${s.id}" data-y="${idx}">↺ 回到这一步</button>` : '';
+  return `<div class="step ${st.s === 'wait' ? 'confirm' : st.s === 'planned' ? 'todo' : st.s}"><span class="ic">${ic || ''}</span><div class="sb"><div class="st"><span class="kd k-${st.k}">${kl}</span><b>${esc(st.t)}</b>${rw}${st.tm && st.s === 'done' ? `<span class="tm">${st.tm}</span>` : ''}</div>${st.d && st.s !== 'todo' && st.s !== 'planned' ? `<div class="sd">${st.d}${st.s === 'done' ? evHtml(st.ev) : ''}</div>` : st.s === 'done' && st.ev ? `<div class="sd">${evHtml(st.ev)}</div>` : ''}${extra}</div></div>`;
+}
+const stTag = s => ({ done:['ok','已完成'], confirm:['warn','等你确认'], wait:['wait','等回复'], running:['ai','执行中'], plan:['','计划待确认'] })[s.status] || ['ai','执行中'];
+const MODES = [['def','默认'],['plan','先出计划'],['goal','按目标推进']];
+const modeName = m => (MODES.find(x => x[0] === m) || MODES[0])[1];
+function ctxCount(s){ const c = s && s.ctx || { in:[], hit:[] }; return c.in.length + c.hit.length + ((S.refs[s ? s.id : 'new'] || []).length); }
+function ctxPanel(s){
+  if (!s) return '<div class="hint">打开一个会话，这里显示分身办这件事用到的背景</div>';
+  const c = s.ctx || { in:[], hit:[] };
+  return `<div class="hint">分身办这件事时用到的背景。移除只影响本次，不删原文</div><div class="pl6"><b style="font-size:12px">带入的（引用、绑定、工作区库）</b><div style="margin-top:6px">${c.in.map(([k, l], i) => `<span class="cx">${k} · ${esc(l)}<button data-a="ctxDel" data-x="${s.id}" data-y="in:${i}">✕</button></span>`).join('') || '<span class="mut">无</span>'}</div>
+    <b style="font-size:12px;display:block;margin-top:10px">检索到的（已向量化的文件、以往做法）</b><div style="margin-top:6px">${c.hit.map(([k, l, r], i) => `<span class="cx">${k} · ${esc(l)} <span class="rl">${r}</span><button data-a="ctxDel" data-x="${s.id}" data-y="hit:${i}">✕</button></span>`).join('') || '<span class="mut">无</span>'}</div>
+    <button class="btn sm" style="margin-top:10px" data-a="refPick" data-x="${s.id}">＋ @ 引用事项、文件、聊天、笔记</button></div>`;
+}
+function planPanel(s){
+  if (!s) return '<div class="hint">打开一个会话，这里显示分身列出的计划，执行时逐项打勾</div>';
+  const isPlan = s.status === 'plan';
+  return `<div class="hint">${isPlan ? '先出计划模式：可以删改步骤，确认后才开始执行' : '分身列出的步骤，执行时逐项打勾'}</div><div class="pl6">${s.steps.map((st, k) => `<div class="r"><span class="ck ${st.s === 'done' ? 'on' : ''}" style="${st.s === 'confirm' || st.s === 'wait' ? 'border-color:var(--warn)' : ''}">${st.s === 'done' ? '✓' : ''}</span><span class="grow" style="${st.s === 'done' ? 'color:var(--ink3)' : ''}">${esc(st.t)}${st.s === 'confirm' ? ' <span class="tag warn">等你确认</span>' : st.s === 'wait' ? ' <span class="tag wait">等回复</span>' : st.s === 'run' ? ' <i class="spin"></i>' : ''}</span>${isPlan ? `<button class="btn lk" style="color:var(--ink3)" data-a="planDel" data-x="${s.id}" data-y="${k}">删除</button>` : ''}</div>`).join('')}
+    ${isPlan ? `<div class="sub" style="margin-top:6px"><span style="color:var(--acc)">＋</span><input id="padd-${s.id}" data-keep data-enter="planAdd" placeholder="加一步，回车保存" style="border:none;outline:none;flex:1;font-size:13px;background:none" value="${esc(val('padd-' + s.id))}"></div><button class="btn pri" style="margin-top:10px;width:100%" data-a="planGo" data-x="${s.id}">确认计划，开始执行</button>` : ''}</div>`;
+}
+function bgPanel(){
+  const ls = SESS.filter(x => x.status !== 'done');
+  return `<div class="hint">正在执行、等你确认、等回复的会话。它们在后台继续，办完会在对话里通知你</div><div class="pl6">${ls.map(x => `<div class="r" style="cursor:pointer" data-a="go" data-x="ws:${x.id}"><span class="tag ${stTag(x)[0]}">${stTag(x)[1]}</span><span class="grow">${esc(x.title)}<br><small>${esc(wsp(x.ws || 'w-def').name)} · ${esc(sessStat(x))}</small></span></div>`).join('') || '<div class="mut">没有在后台运行的会话</div>'}</div>`;
+}
+function artPanel(s){
+  const ids = S.artTab === 'sess' ? (s ? s.arts : []) : Object.keys(ARTS).filter(k => !s || sess(ARTS[k].sess)?.ws === s.ws).reverse();
+  if (!S.artSel || !ARTS[S.artSel] || !ids.includes(S.artSel)) S.artSel = ids[ids.length - 1] || null;
+  const a = S.artSel && ARTS[S.artSel];
+  const base = n => String(n || '').replace(/ v\d+(\.\w+)$/, '$1');
+  const vers = a ? Object.entries(ARTS).filter(([k, x]) => base(x.name) === base(a.name)) : [];
+  const out = `<div style="padding:8px 14px 0"><div class="tabs"><span class="${S.artTab === 'sess' ? 'on' : ''}" data-a="artTab" data-x="sess">本会话 ${s ? s.arts.length : 0}</span><span class="${S.artTab === 'all' ? 'on' : ''}" data-a="artTab" data-x="all">本工作区全部</span><span class="grow"></span><small style="padding:6px 0">自动存进工作区库</small></div></div>
+    <div class="al" data-sc="al">${ids.length ? ids.map(k => `<div class="ai2 ${S.artSel === k ? 'on' : ''} ${S.newArt === k ? 'new' : ''}" data-a="artSel" data-x="${k}">${extIco(ARTS[k].type)}<div class="grow"><div class="t">${esc(ARTS[k].name)}</div><small>${ARTS[k].time}</small></div></div>`).join('') : '<div class="mut" style="padding:20px 8px;text-align:center">还没有产物。办完后出现在这里</div>'}</div>
+    ${a ? `<div class="pv"><div class="ph2"><b style="font-size:12.5px" class="grow">${esc(a.name)}</b>${vers.length > 1 ? `<select data-a2="verSel" style="border:1px solid var(--line);border-radius:6px;font-size:12px">${vers.map(([k, x]) => `<option value="${k}" ${k === S.artSel ? 'selected' : ''}>${(x.name.match(/ (v\d+)\./) || [, 'v1'])[1]}${k === vers[vers.length - 1][0] ? '（最新）' : ''}</option>`).join('')}</select><button class="btn sm" data-a="artCmp" data-x="${vers[0][0]}" data-y="${vers[vers.length - 1][0]}">对比</button>` : ''}</div>
+      <div class="ph2" style="padding-top:0"><button class="btn sm" data-a="openArt" data-x="${S.artSel}">⤢ 全屏</button><button class="btn sm" data-a="toast" data-x="原型：下载到本地">下载</button><button class="btn sm" data-a="artToChat" data-x="${S.artSel}">发到群</button><button class="btn sm" data-a="artToTask" data-x="${S.artSel}">建成事项</button><button class="btn sm" data-a="artAddTo" data-x="${S.artSel}">加到事项</button></div>
+      <div class="box">${artBody(a.kind, a.name)}</div><div class="note">旧版本保留 · <a href="#" data-a="go" data-x="file:${S.artSel}" style="color:var(--acc)">在工作区库查看</a></div></div>` : ''}`;
+  S.newArt = null;
+  return out;
+}
+function rightPanel(s){
+  const T = [['art','产物','▤'],['plan','计划','☑'],['ctx','上下文','◎'],['bg','后台','⟳']];
+  if (!S.rpOpen) return `<div class="rp"><div class="rstrip"><button data-a="rpOpen" title="展开面板">⇤</button>${T.map(([k, l, i]) => `<button data-a="rpTab" data-x="${k}" title="${l}">${i}</button>`).join('')}</div></div>`;
+  const body = { art:() => artPanel(s), plan:() => planPanel(s), ctx:() => ctxPanel(s), bg:bgPanel }[S.rp]();
+  const nbg = SESS.filter(x => x.status !== 'done').length;
+  return `<div class="rp"><div class="rph">${T.map(([k, l]) => `<button class="t ${S.rp === k ? 'on' : ''}" data-a="rpTab" data-x="${k}">${l}${k === 'bg' && nbg ? ` ${nbg}` : k === 'ctx' && s ? ` ${ctxCount(s)}` : ''}</button>`).join('')}<span class="grow"></span><button class="ic" data-a="rpWide" title="${S.rpWide ? '恢复宽度' : '加宽'}">${S.rpWide ? '⇥⇤' : '⇤⇥'}</button><button class="ic" data-a="rpClose" title="收起面板">⇥</button></div><div class="rpb">${body}</div></div>`;
+}
+function wsComp(s){
+  const k = s ? s.id : 'new', refs = S.refs[k] || [], q = s ? (s.queue || []).length : 0;
+  const mode = s ? s.mode || 'def' : S.newMode || 'def';
+  const top = `${q ? `<div class="qbar">排队 ${q} 条：当前步骤结束后处理</div>` : ''}${refs.length ? `<div class="refs">${refs.map(([t, l], i) => `<span class="cx">@${t} · ${esc(l)}<button data-a="refDel" data-x="${k}" data-y="${i}">✕</button></span>`).join('')}</div>` : ''}${!s && mode === 'goal' ? `<div class="form" style="margin:0 0 6px;grid-template-columns:70px 1fr"><span class="mut">完成标准</span><input id="goal-std" data-keep placeholder="例：李娜收到口径一致的汇总表，并确认可以用" value="${esc(val('goal-std'))}"></div>` : ''}`;
+  const tb = `<div class="tbar"><button class="plus" data-a="toast" data-x="原型：上传附件">＋</button><span class="opt" data-a="refPick" data-x="${k}">@ 引用</span><span class="opt" data-a="skillPick">/ 技能</span><select data-a2="modeSel" data-x="${k}" title="执行模式">${MODES.map(([v, l]) => `<option value="${v}" ${v === mode ? 'selected' : ''}>模式：${l}</option>`).join('')}</select>${s ? `<span class="opt" data-a="rpTab" data-x="ctx">上下文 ${ctxCount(s)} 项</span>` : ''}</div>`;
+  return `<div class="comp sm">${top}<textarea id="ws-in" data-keep data-enter="wsSend" placeholder="${s ? (s.status === 'running' ? '执行中也可以追加要求，会排队处理' : '追加要求、追问、让它改……') : '说清要办什么。@ 引用材料，/ 调用技能'}">${esc(val('ws-in'))}</textarea><div class="ct">${tb}<span class="grow"></span>${s && s.status === 'running' ? `<button class="btn sm" data-a="stopSess" data-x="${s.id}">■ 停止</button>` : ''}<button class="send" data-a="wsSend">↑</button></div></div>`;
+}
+function wsMgr(){
+  const v = S.wsView;
+  if (v === 'plugins') return `<div class="mg"><h2>插件</h2><div class="sub2">插件 = 技能（办事方法）+ 专家（专业设定）+ 连接器（访问系统，按你本人权限、默认只读）。启用后，分身办事时按需调用。</div><div class="cards">${PLUGINS.map(p => `<div class="acard"><div class="row"><span class="ic2b">${p.ico}</span><div class="grow"><b>${p.name}</b><br><small>${p.from}</small></div><button class="sw ${p.on ? 'on' : ''}" data-a="plugTog" data-x="${p.id}"></button></div><small><b>技能</b> ${p.sk.join('、')}</small><small><b>专家</b> ${p.ex.join('、') || '—'}</small><small><b>连接器</b> ${p.cn.join('、') || '首版不接具体系统'}</small></div>`).join('')}<div class="acard" style="border-style:dashed;align-items:center;justify-content:center;color:var(--ink3)">＋ 插件市场<span class="p1">后续</span></div></div></div>`;
+  if (v === 'auto') return `<div class="mg"><h2>自动化<span class="p1">P1</span></h2><div class="sub2">按时间或条件自动发起会话，办完在对话里告诉你。首版只放入口，下面是示意。</div><div class="card" style="border:1px solid var(--line);border-radius:12px;background:#fff">${[['每周五 17:00','写本周周报','工作区「默认工作区」'],['每月 1 日 09:00','汇总上月各科室加班情况','工作区「2027 预算」'],['收到「预算」相关文件时','核对口径，有问题先问我','工作区「2027 预算」']].map(([w, t, ws]) => `<div class="ln" style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line2);font-size:13px"><span class="tag">${w}</span><b class="grow">${t}</b><small>${ws}</small><button class="sw" disabled style="opacity:.5"></button></div>`).join('')}</div></div>`;
+  if (v === 'apps') return `<div class="mg"><h2>轻应用</h2><div class="sub2">你在工作台里做出来的专属应用：把办过的事做成一个带界面的小工具，下次填几个参数就能用。可以自己用；提供给组织里的其他人，要经过组织审核（后续）。</div><div class="cards">
+      <div class="acard"><div class="row"><span class="ic2b">¥</span><div class="grow"><b>预算测算汇总工具</b><br><small>来自会话「2027 预算测算汇总」</small></div><span class="tag ok">可用</span></div><small>选择各科室测算表，按财务口径核对并汇总，差异超过阈值时先问你。</small><div class="acts" style="margin-top:4px"><button class="btn sm pri" data-a="appOpen" data-x="ys">打开</button><button class="btn sm" disabled>提供给组织<span class="p1">后续</span></button></div></div>
+      <div class="acard"><div class="row"><span class="ic2b">盾</span><div class="grow"><b>迎检材料核对</b><br><small>草稿 · 来自会话「等保迎检材料清单」</small></div><span class="tag">草稿</span></div><small>对照测评通知检查材料是否齐全，生成缺项清单。</small><div class="acts" style="margin-top:4px"><button class="btn sm" data-a="toast" data-x="原型：草稿应用，在会话里继续完善">继续完善</button></div></div>
+      <div class="acard" style="border-style:dashed;align-items:center;justify-content:center;color:var(--ink3);cursor:pointer" data-a="toast" data-x="原型：在会话里说「把这个做成一个轻应用」，分身会生成应用">＋ 在会话里说「做成轻应用」</div></div></div>`;
+  if (v === 'app') return `<div class="mg"><div class="appv"><div class="row" style="margin-bottom:4px"><button class="btn sm" data-a="wsView" data-x="apps">← 轻应用</button><span class="ic2b" style="width:28px;height:28px;border-radius:8px;background:var(--acc-bg);color:var(--acc);display:inline-flex;align-items:center;justify-content:center;font-weight:700">¥</span><h2 class="grow" style="margin:0">预算测算汇总工具</h2><button class="btn sm" data-a="go" data-x="ws:ys">在会话里修改</button><button class="btn sm" disabled>提供给组织<span class="p1">后续</span></button></div>
+      <div class="sub2">陈思远的轻应用 · 按你本人权限运行 · 来自会话「2027 预算测算汇总」</div>
+      <div class="acard"><div class="form" style="grid-template-columns:110px 1fr"><span class="mut">各科室测算表</span><select><option>工作区库 · 5 个科室测算表.zip</option></select><span class="mut">财务口径依据</span><select><option>关于 2027 年度预算编制工作的通知.pdf</option></select><span class="mut">差异阈值</span><input value="10 万"><span class="mut">只报新增需求</span><label><input type="checkbox" checked style="width:auto"> 剔除已签订的延续合同</label></div><div class="acts"><button class="btn pri" data-a="appRun">生成汇总表</button></div></div>
+      ${S.appRan ? `<div class="acard" style="margin-top:12px"><div class="row"><b class="grow">结果 · 合计 312.5 万</b><span class="tag warn">2 处口径已按规则修正</span><button class="btn sm" data-a="toast" data-x="原型：存进工作区库">存到工作区库</button></div>${artBody('ys2')}</div>` : ''}</div></div>`;
+  return '';
+}
+function pWs(){
+  const sl = ws => SESS.filter(s => (s.ws || 'w-def') === ws && !s.arch).sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0));
+  const left = `<div class="wl6"><div style="padding:12px 10px 6px;display:flex;gap:6px"><button class="btn pri grow" data-a="newSess">＋ 新会话</button><button class="btn" data-a="newWsp" title="新建工作区">＋ 工作区</button></div>
+    <div style="padding:0 10px 4px"><div class="sr" style="border:1px solid var(--line);border-radius:8px;padding:3px 10px;color:var(--ink3);font-size:12.5px;background:#fff">⌕ 搜索会话</div></div><div class="sc" data-sc="wl">
+    ${WSP.map(w => { const ls = sl(w.id); const open = S.wsOpen[w.id] !== false; return `<div class="sh" style="cursor:pointer" data-a="wspTog" data-x="${w.id}">${open ? '▾' : '▸'} ${esc(w.name)}<span class="c">${ls.length}</span></div>${open ? ls.map(s => `<div class="si ${S.cur === s.id && S.wsView === 'sess' ? 'on' : ''}" data-a="go" data-x="ws:${s.id}" style="cursor:pointer"><span class="t">${s.pin ? '<span class="pin">📌</span>' : ''}${esc(s.title)}</span><span class="s"><span style="color:${s.status === 'confirm' ? 'var(--warn)' : s.status === 'wait' ? 'var(--wait)' : s.status === 'running' ? 'var(--acc)' : ''}">${s.status === 'running' ? '<i class="spin" style="width:9px;height:9px;border-width:1.5px"></i> ' : ''}${esc(sessStat(s))}</span><span>${s.time}</span></span><button class="mn" data-a="sessMenu" data-x="${s.id}">⋯</button></div>`).join('') || '<div class="mut" style="padding:2px 12px 6px;font-size:12px">还没有会话</div>' : ''}`; }).join('')}
+    </div><div class="ent">
+      <button class="${S.wsView === 'plugins' ? 'on' : ''}" data-a="wsView" data-x="plugins" title="技能、专家、连接器"><span class="i">⊞</span>插件<small>${PLUGINS.filter(p => p.on).length} 个启用</small></button>
+      <button class="${S.wsView === 'auto' ? 'on' : ''}" data-a="wsView" data-x="auto" title="按时间或条件自动发起会话"><span class="i">⏱</span>自动化<small><span class="p1">P1</span></small></button>
+      <button class="${S.wsView === 'apps' || S.wsView === 'app' ? 'on' : ''}" data-a="wsView" data-x="apps" title="你做出来的专属应用"><span class="i">▦</span>轻应用<small>1 个可用</small></button></div></div>`;
+
+  const s = S.cur && sess(S.cur);
+  let mid;
+  if (S.wsView !== 'sess') mid = `<div class="mid6">${wsMgr()}</div>`;
+  else if (!s){
+    const sk = PLUGINS.filter(p => p.on).flatMap(p => p.sk).slice(0, 6);
+    mid = `<div class="mid6"><div class="empty"><span class="orb lg"></span><h2 style="margin:16px 0 0;font-size:20px;color:var(--ink)">在工作台办一件事</h2><p style="margin:0 0 6px;text-align:center">说清要办什么，${NAME}会列计划、分步执行，遇到规则里的情况停下来问你。<br>结果出现在右侧面板，也存进工作区库。</p>
+      <div style="width:min(660px,100%)"><div class="row" style="margin-bottom:8px;font-size:12.5px"><span class="mut" style="white-space:nowrap">放进工作区</span><select id="new-wsp" style="border:1px solid var(--line);border-radius:8px;padding:3px 8px">${WSP.map(w => `<option value="${w.id}" ${w.id === S.newWsp ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select><span class="grow"></span><span class="mut">模式说明：默认＝直接办；先出计划＝你确认后再办；按目标推进＝你定完成标准，分身持续推进</span></div>${wsComp(null)}</div>
+      <div class="chips"><span class="mut" style="font-size:12px;align-self:center">试试：</span>${sk.map(k => `<button data-a="wsQuick" data-x="${k}">/ ${k}</button>`).join('')}</div></div></div>`;
+  } else {
+    const tg = stTag(s), done = s.steps.filter(x => x.s === 'done'), rest = s.steps.map((x, k) => [x, k]).filter(([x]) => x.s !== 'done');
+    const open = S.stepOpen[s.id];
+    mid = `<div class="mid6"><div class="hd6"><div class="row"><h2 class="grow">${esc(s.title)}</h2><button class="btn sm" data-a="sessMenu" data-x="${s.id}">⋯</button>${!S.rpOpen ? `<button class="btn sm" data-a="rpOpen">⇤ 面板</button>` : ''}</div><div class="meta" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:12px">
+        <span class="tag ${tg[0]}">${tg[1]}</span><span class="modeb">${modeName(s.mode)}</span><span class="tag">▣ ${esc(wsp(s.ws || 'w-def').name)}</span>
+        ${s.plugins.map(p => `<span class="tag">插件 · ${p}</span>`).join('')}
+        ${s.from ? `<span class="mut">引用事项「<a href="#" data-a="go" data-x="task:${s.from.id}" style="color:var(--acc)">${esc(s.from.l)}</a>」</span>` : ''}</div></div>
+      <div class="wt" data-bottom><div class="tin">
+        ${s.goal ? `<div class="goalbar"><b>目标</b>　${esc(s.goal.g)}<br><b>完成标准</b>　${esc(s.goal.std || '由你判断')}<br><small>按目标推进：分身自行拆解、可跨时间持续推进，只在规则处停下；认为达成时会提议结束，由你确认</small></div>` : ''}
+        <div class="m me"><div class="bb">${esc(s.req)}</div></div>
+        <div class="m ai"><span class="orb md ${s.status === 'running' ? 'busy' : ''}"></span><div class="bb" style="flex:1;max-width:none"><div class="w">${NAME} · ${s.time}</div>
+          ${s.status === 'plan' ? `<div>计划列好了，共 ${s.steps.length} 步。你可以在右侧「计划」里删改，确认后我再开始办。</div><div class="acts"><button class="btn sm pri" data-a="planGo" data-x="${s.id}">确认计划，开始执行</button><button class="btn sm" data-a="rpTab" data-x="plan">去改计划</button></div>` :
+          `<div class="sd" style="margin-bottom:6px">计划 ${s.steps.length} 步 · 进度在右侧「计划」</div>
+          <div class="run">${done.length ? `<div class="fold" data-a="stepTog" data-x="${s.id}">${open ? '▾' : '▸'} 已执行 ${done.length} 步${open ? '' : '（展开看每一步的细节和依据）'}</div>` : ''}${open ? s.steps.map((st, k) => st.s === 'done' ? stepHtml(st, s, k) : '').join('') : ''}${rest.map(([st, k]) => stepHtml(st, s, k)).join('')}${!rest.length && !done.length ? '<span class="mut">还没有步骤</span>' : ''}</div>`}</div></div>
+        ${s.tail.map(msgHtml).join('')}${S.typing && S.page === 'ws' ? typingHtml() : ''}
+      </div></div>
+      <div style="padding:8px 22px 14px"><div style="max-width:760px;margin:0 auto">${wsComp(s)}</div></div></div>`;
+  }
+  if (S.wsView !== 'sess') return `<div class="ws6" style="--rpw:0px">${left}${mid}<div></div></div>`;
+  const cls = !S.rpOpen ? 'rpc' : S.rpWide ? 'rpw' : '';
+  return `<div class="ws6 ${cls}">${left}${mid}${rightPanel(s)}</div>`;
+}
+
+/* ---------- 事项 ---------- */
+const SMART = [['today','今天', t => !t.done && t.d != null && t.d <= 16],['next','接下来 7 天', t => !t.done && t.d != null && t.d > 16 && t.d <= 23],['all','全部', t => !t.done],['done','已完成', t => t.done]];
+function listFilter(){ const sm = SMART.find(x => x[0] === S.tlist); return sm ? sm[2] : (t => !t.done && t.list === S.tlist); }
+function listName(){ const sm = SMART.find(x => x[0] === S.tlist); return sm ? sm[1] : S.tlist; }
+const srcIco = s => !s ? '' : ({ im:'💬', note:'✎', ws:'⌘', fs:'◉', me:'' })[s.t] || '';
+function tStat(t){
+  if (t.done) return null;
+  if (t.looks) return ['ok','看起来办完了'];
+  const ss = SESS.filter(x => x.from?.id === t.id || x.id === t.fs);
+  if (ss.some(x => x.status === 'confirm')) return ['warn','等你确认'];
+  if (ss.some(x => x.status === 'running' || x.status === 'wait' || x.status === 'plan')) return ['ai','分身在办'];
+  if (t.wait) return ['wait','在等' + t.wait];
+  return null;
+}
+function calHtml(){
+  // 2026 年 11 月：11-01 是周日；d>30 表示 12 月
+  const cells = []; for (let k = 0; k < 35; k++){ const d = k - 5; cells.push(d); }
+  const items = d => { const out = []; TASKS.forEach(t => { if (t.d === d) out.push([t, null]); (t.sub || []).forEach(x => { if (x.d === d) out.push([t, x]); }); }); return out; };
+  return `<div class="cal">${'一二三四五六日'.split('').map(w => `<div class="dh">周${w}</div>`).join('')}${cells.map(d => { const o = d < 1 || d > 30; const dd = o ? (d < 1 ? 31 + d : d - 30) : d; return `<div class="dc ${o ? 'o' : ''} ${d === 16 ? 't' : ''}"><span class="n">${dd}</span>${items(d).map(([t, x]) => `<span class="ce ${x ? 's' : ''} ${(x ? x.done : t.done) ? 'd' : ''} ${!t.done && d < 16 ? 'r' : ''}" data-a="tsel" data-x="${t.id}">${x ? '↳ ' + esc(x.t) : esc(t.title)}</span>`).join('')}</div>`; }).join('')}</div>`;
+}
+function pTasks(){
+  const cnt = f => TASKS.filter(f).length;
+  const left = `<div class="tl" data-sc="tl">
+    <div class="sh">按时间</div>${SMART.slice(0, 3).map(([k, l, f]) => `<button class="li ${S.tlist === k ? 'on' : ''}" data-a="tlist" data-x="${k}"><span class="i">${{ today:'☀', next:'▦', all:'≡' }[k]}</span>${l}<span class="c">${cnt(f) || ''}</span></button>`).join('')}
+    <div class="sh" style="margin-top:10px">按清单</div><button class="li ${S.tlist === '收件箱' ? 'on' : ''}" data-a="tlist" data-x="收件箱"><span class="i">⬚</span>收件箱<span class="c">${cnt(t => !t.done && t.list === '收件箱') || ''}</span></button>${LISTS.map(l => `<button class="li ${S.tlist === l ? 'on' : ''}" data-a="tlist" data-x="${l}"><span class="i">▪</span>${l}<span class="c">${cnt(t => !t.done && t.list === l) || ''}</span></button>`).join('')}
+    <button class="li" data-a="newList"><span class="i">＋</span><span class="mut">新建清单</span></button>
+    <div style="border-top:1px solid var(--line);margin:12px 0 6px"></div>
+    <button class="li ${S.tlist === 'done' ? 'on' : ''}" data-a="tlist" data-x="done"><span class="i">✓</span>已完成<span class="c">${cnt(t => t.done)}</span></button>
+    <div class="mut" style="padding:4px 10px;font-size:11.5px">办完的事在这里，可以重新打开继续办</div></div>`;
+  const ls = TASKS.filter(listFilter());
+  const timeView = ['today','next','all'].includes(S.tlist);
+  const groups = S.tlist === 'done' ? [['已完成', ls]] : [
+    ['已逾期', ls.filter(t => t.d != null && t.d < 16), 'r'], ['今天', ls.filter(t => t.d === 16)], ['明天', ls.filter(t => t.d === 17)],
+    ['未来 7 天', ls.filter(t => t.d > 17 && t.d <= 23)], ['以后', ls.filter(t => t.d > 23)], ['无日期', ls.filter(t => t.d == null)]];
+  const row = t => { const st = tStat(t), sb = t.sub || []; return `<div class="tr ${S.tsel === t.id ? 'on' : ''} ${t.done ? 'dn' : ''}" data-a="tsel" data-x="${t.id}">
+      <button class="ck p${t.p || 0} ${t.done ? 'on' : ''}" data-a="tdone" data-x="${t.id}" title="${t.done ? '重新打开' : '勾掉＝办完'}">${t.done ? '✓' : ''}</button>
+      <span class="tt">${esc(t.title)}${sb.length ? `<span class="sc2">${sb.filter(x => x.done).length}/${sb.length}</span>` : ''}</span>
+      ${timeView && t.list !== '收件箱' ? `<span class="lt2s">${esc(t.list)}</span>` : '<span class="grow"></span>'}${st ? `<span class="tag ${st[0]}">${st[1]}</span>` : ''}${t.done ? `<button class="btn sm" data-a="reopen" data-x="${t.id}">继续办</button>` : `<span class="dd ${t.d < 16 ? 'r' : t.d === 16 ? 't' : ''}">${dlabel(t.d)}</span>`}</div>`; };
+  const dsel = `<select id="tadd-d">${[['', '期限'],[16,'今天'],[17,'明天'],[19,'周四'],[20,'周五'],[23,'下周一']].map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select>`;
+  const lsel = `<select id="tadd-l"><option value="">清单</option><option>收件箱</option>${LISTS.map(l => `<option ${l === S.tlist ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const mid = `<div class="tm2"><div class="hd"><h2>${esc(listName())}</h2><span class="mut">${ls.length} 项</span><span class="grow"></span>${S.tlist !== 'done' ? `<span class="seg"><button class="${S.tview === 'list' ? 'on' : ''}" data-a="tview" data-x="list">列表</button><button class="${S.tview === 'cal' ? 'on' : ''}" data-a="tview" data-x="cal">日历</button></span>` : ''}</div>
+    <div class="thint">${S.tlist === 'done' ? '办完的事项。点「继续办」重新打开，上下文和会话都还在。' : '事项是你要盯到办完的事。点一条，可以补充背景、交给分身办；勾掉＝办完。'}</div>
+    ${S.tlist !== 'done' ? `<div class="qa2"><span style="color:var(--acc)">＋</span><input id="tadd" data-keep data-enter="tadd" placeholder="新建一个事项，回车保存" value="${esc(val('tadd'))}">${dsel}${lsel}</div>` : ''}
+    ${S.tview === 'cal' && S.tlist !== 'done' ? `<div style="padding:2px 26px 8px" class="mut">2026 年 11 月 · 事项和子事项按期限显示</div><div style="flex:1;overflow:auto">${calHtml()}</div>` :
+    `<div class="tls" data-sc="tls">${groups.filter(g => g[1].length).map(([h, ls2, c]) => `<div class="gh ${c || ''}">${h}<span class="mut">${ls2.length}</span></div>${ls2.map(row).join('')}`).join('') || `<div class="mut" style="padding:40px 10px;text-align:center;line-height:2">这里还没有事项。<br>在上面输入一条；或者去聊天里选中消息，点「建成事项」</div>`}</div>`}</div>`;
+  const t = task(S.tsel);
+  let right = '<div class="td"><div class="mut" style="text-align:center;margin-top:80px">点左边一条事项，<br>在这里补充背景、交给分身办</div></div>';
+  if (t){
+    const ss = SESS.filter(x => x.from?.id === t.id || x.id === t.fs), st = tStat(t);
+    const srcLink = t.src ? ({ im:`im:${t.src.id}`, note:`note:${t.src.id}`, ws:`ws:${t.src.id}` })[t.src.t] : null;
+    const ctx = t.ctx || [], binds = t.bind || [];
+    right = `<div class="td" data-sc="td"><div class="tt2"><button class="ck p${t.p || 0} ${t.done ? 'on' : ''}" style="margin-top:5px" data-a="tdone" data-x="${t.id}">${t.done ? '✓' : ''}</button><input id="tt-${t.id}" data-keep value="${esc(val('tt-' + t.id) || t.title)}"></div>
+      <div class="row" style="margin:6px 0 0 27px;gap:6px;font-size:12px">${t.done ? '<span class="tag">已完成</span>' : `<span class="dd ${t.d < 16 ? 'r' : ''}">${dlabel(t.d) || '无期限'}</span>`}<span class="mut">· ${esc(t.list)}</span>${st ? `<span class="tag ${st[0]}">${st[1]}</span>` : ''}</div>
+      ${t.looks && !t.done ? `<div class="done-bar"><span class="orb xs"></span><span class="grow">${NAME}：相关回复已发送、会话已完成，看起来办完了。</span><button class="btn sm pri" data-a="tdone" data-x="${t.id}">勾掉</button><button class="btn sm" data-a="notDone" data-x="${t.id}">还没完</button></div>` : ''}
+      <div class="tdh">${t.done ? `<button class="btn acc grow" data-a="reopen" data-x="${t.id}">↺ 继续办（重新打开）</button>` : `<button class="btn acc grow" data-a="taskToWs" data-x="${t.id}">✦ 带上下文交给${NAME}办</button><button class="btn" data-a="tdone" data-x="${t.id}">✓ 勾掉</button>`}</div>
+      ${ss.length ? `<div style="font-size:12px;margin:8px 0 0">${ss.map(x => `<div class="scard" style="margin:4px 0" data-a="go" data-x="ws:${x.id}"><div class="grow"><b>会话 · ${esc(x.title)}</b><small>${esc(sessStat(x))}</small></div><span class="mut">→</span></div>`).join('')}</div>` : ''}
+      <div class="box2 ctxbox2"><div class="h">上下文<span class="mut" style="font-weight:400">· ${ctx.length + binds.length} 项 · 交给分身办时一起带上</span></div>
+        ${ctx.map(([k, l], n) => `<div class="ctxit"><span class="tag">${k}</span><span class="grow">${esc(l)}</span><button class="btn lk" style="color:var(--ink3)" data-a="tctxDel" data-x="${t.id}" data-y="${n}" title="只从事项里拿掉，不删原文">移除</button></div>`).join('')}
+        ${binds.map(b => `<div class="ctxit"><span class="tag ai">绑定</span><span class="grow">${chat(b) ? '💬 ' + esc(chat(b).n) : '✎ ' + esc(note(b)?.title || '')}<small>新消息由分身自动跟进</small></span><button class="btn lk" style="color:var(--ink3)" data-a="unbind" data-x="${t.id}" data-y="${b}">解绑</button></div>`).join('')}
+        ${!ctx.length && !binds.length ? '<div class="mut" style="font-size:12.5px">还没有背景。补几条，分身办事时会更准。</div>' : ''}
+        <div class="ctxin"><span style="color:var(--acc)">＋</span><input id="cin-${t.id}" data-keep data-enter="ctxText" placeholder="粘贴或输入一段背景，回车加入" value="${esc(val('cin-' + t.id))}"></div>
+        <div class="ctxsrc"><button class="btn sm" data-a="ctxFrom" data-x="msg">💬 从聊天选</button><button class="btn sm" data-a="ctxFrom" data-x="note">✎ 从笔记选</button><button class="btn sm" data-a="ctxFrom" data-x="file">▤ 从资料库选</button><button class="btn sm" data-a="bindPick" data-x="${t.id}">⛓ 绑定聊天</button></div></div>
+      <div class="box2"><div class="h">子事项<span class="mut" style="font-weight:400">· 聚焦一个目标，可单独交给分身办</span></div>${(t.sub || []).map((x, k) => `<div class="sub"><button class="ck ${x.done ? 'on' : ''}" data-a="subDone" data-x="${t.id}" data-y="${k}">${x.done ? '✓' : ''}</button><span class="grow" style="${x.done ? 'color:var(--ink3);text-decoration:line-through' : ''}">${esc(x.t)}</span><small>${dlabel(x.d)}</small><button class="btn lk" data-a="subWs" data-x="${t.id}" data-y="${k}">交给${NAME}办</button></div>`).join('')}<div class="sub"><span style="color:var(--acc)">＋</span><input id="sadd-${t.id}" data-keep data-enter="subAdd" placeholder="添加子事项，回车保存" style="border:none;outline:none;flex:1;font-size:13px" value="${esc(val('sadd-' + t.id))}"></div></div>
+      <div class="more"><div class="h2b" data-a="tmore">${S.tmore ? '▾' : '▸'} 详细信息<span class="mut" style="font-weight:400;margin-left:6px">期限、清单、优先级、来源、描述</span></div>${S.tmore ? `<div class="in2"><dl class="kv" style="margin:0"><dt>期限</dt><dd>${dlabel(t.d) || '无'}${t.rep ? ` · ↻ ${t.rep}` : ''}</dd><dt>清单</dt><dd>${t.list}</dd><dt>优先级</dt><dd>${['无','低','中','高'][t.p || 0]}</dd>${t.wait ? `<dt>在等</dt><dd>${t.wait} <button class="btn sm" data-a="remind" data-x="${t.id}">起草提醒</button></dd>` : ''}<dt>来源</dt><dd>${t.src ? `${srcIco(t.src)} ${esc(t.src.l)}${srcLink ? ` <a href="#" style="color:var(--acc)" data-a="go" data-x="${srcLink}">打开原文</a>` : ''}` : '手动添加'}</dd></dl><textarea id="td-${t.id}" data-keep placeholder="描述……" style="margin-top:10px">${esc(val('td-' + t.id))}</textarea><button class="btn sm" disabled style="margin-top:8px">共享给同事<span class="p1">P1</span></button></div>` : ''}</div></div>`;
+  }
+  return `<div class="tk">${left}${mid}${right}</div>`;
+}
+
+/* ---------- 消息 ---------- */
+function pIm(){
+  const c = chat(S.chat);
+  const list = `<div class="il"><div class="hd"><div class="row" style="margin-bottom:8px"><b style="font-size:15px">消息</b><small>人和人的聊天</small><span class="grow"></span><button class="btn sm" data-a="toast" data-x="原型：发起单聊或群聊">＋</button></div><div class="sr">⌕ 搜索</div></div>
+    <div style="flex:1;overflow:auto" data-sc="il">${CHATS.map(x => `<div class="cs ${S.chat === x.id ? 'on' : ''}" data-a="go" data-x="im:${x.id}"><span class="av ${x.g ? 'g' : ''}">${x.n[0]}</span>
+      <div class="grow"><div class="n">${esc(x.n)}${x.g ? `<span class="aim ${x.ai ? '' : 'off'}">${x.ai ? 'AI' : 'AI 未开启'}</span>` : ''}</div><div class="row"><span class="p grow">${esc(lastText(x))}</span>${x.srt && !x.replied ? `<span class="srt">${x.srt}</span>` : ''}</div></div>
+      <div class="rt">${x.tm}${x.un ? `<span class="un">${x.un}</span>` : ''}</div></div>`).join('')}</div></div>`;
+  const msgs = c.msgs.map(m => {
+    if (m.day) return `<div class="day">${m.day}</div>`;
+    const who = m.me ? '陈思远' : m.f;
+    const av = `<span class="av sm ${m.ext ? 'ext' : ''}">${(m.me ? '陈' : m.f)[0]}</span>`;
+    let body;
+    if (m.card === 'xt') body = `<div class="icard"><div class="h">事项 · 二期上线方案 · 分工</div>${[['刘洋 · 测试报告', task('t4').d < 16 ? '<span class="tag warn">逾期</span>' : `<span class="tag">${dlabel(task('t4').d)}</span>`],['李娜 · 预算确认','<span class="tag">已交付</span>'],['周敏 · 供应商合同','<span class="tag">11-20</span>']].map(([a, b]) => `<div class="r"><span class="grow">${a}</span>${b}</div>`).join('')}<div class="f"><button class="btn lk" data-a="go" data-x="tasks:二期上线">在事项中打开 →</button></div></div>`;
+    else if (m.file){ const f = fileById(m.file); body = `${m.x ? `<div class="b" style="margin-bottom:4px">${esc(m.x)}</div>` : ''}<div class="file" data-a="${f.art ? 'go' : 'saveFile'}" data-x="${f.art ? 'file:' + m.file : m.file}">${extIco(f.type)}<div><div style="font-size:12.5px">${esc(f.name)}</div><small>${f.art ? '在工作区库查看' : '预览 · 保存到资料库'}</small></div></div>`; }
+    else body = `<div class="b">${esc(m.x)}</div>`;
+    const aiOn = !c.g || c.ai, ms = S.msel.on && S.msel.chat === c.id, picked = ms && S.msel.ids.includes(m.id);
+    const ha = !ms && !m.me && m.id && aiOn ? `<div class="ha"><button class="fs" data-a="giveFs" data-x="${m.id}">✦ 交给${NAME}</button><button data-a="draftReply" data-x="${c.id}">帮我回</button><button data-a="msgTask" data-x="${m.id}">建成事项</button><button data-a="msgAddTo" data-x="${m.id}">加到事项</button><button data-a="msgNote" data-x="${m.id}">记到笔记</button><button data-a="mselOn" data-x="${m.id}">☑ 多选</button></div>` : '';
+    const mk = m.me && m.drafted ? `<span class="mysrc" title="只有你看得到：这条由${NAME}起草，来自会话「${esc(m.drafted)}」">✦ 分身起草 · 仅你可见</span>` : '';
+    const sel = ms ? `<span class="sel ${picked ? 'on' : ''}">${picked ? '✓' : ''}</span>` : '';
+    return `<div class="cm ${m.me ? 'me' : ''} ${ms ? 'pick' : ''} ${picked ? 'picked' : ''}" ${ms ? `data-a="mselTog" data-x="${m.id}"` : ''}>${m.me ? '' : sel}${av}<div><div class="w">${who} ${m.t || ''}${mk}</div>${body}</div>${m.me ? sel : ''}${ha}</div>`;
+  }).join('');
+  const d = S.drafts[c.id];
+  const bs = S.bindSug && S.bindSug.chat === c.id ? `<div class="bindsug"><span class="orb xs"></span><span class="grow">${NAME}提议：把这个聊天绑定到事项「${esc(task(S.bindSug.task).title)}」，对方回复后会话从「等回复」继续。</span><button class="btn sm pri" data-a="bindOk">绑定</button><button class="btn sm" data-a="bindNo">不用</button></div>` : '';
+  const compTop = bs + (d ? `<div><span class="dtag">✦ ${NAME}起草 · ${esc(d.why)} · 只有你看得到这条提示 · 发出去的是你本人的普通消息</span>${d.att ? `<span class="att">${extIco(ARTS[d.att].type).replace('ext ', 'ext ').replace('<span', '<span style="width:14px;height:17px;font-size:0"')} ${esc(ARTS[d.att].name)}</span>` : ''}<button class="btn lk" data-a="dropDraft" data-x="${c.id}">不用了</button></div>` : '');
+  if (d && !S.inp['im-' + c.id]) S.inp['im-' + c.id] = d.text;
+  const rel = TASKS.filter(t => (t.bind || []).includes(c.id) && !t.done);
+  const room = `<div class="ic2"><div class="hd"><span class="av ${c.g ? 'g' : ''}">${c.n[0]}</span><div class="grow"><b>${esc(c.n)}</b><br><small>${c.sub}${c.g ? ` · ${c.ai ? '群 AI 已开启（只管读）' : '群 AI 未开启，分身读不到这个群'}` : ''}</small></div>
+      ${rel.length ? `<button class="btn sm" data-a="go" data-x="task:${rel[0].id}" title="只有你看得到">我的相关事项 ${rel.length}</button>` : ''}<button class="btn sm" data-a="toast" data-x="原型：聊天里的文件。不会自动进资料库，需要时点「保存到资料库」">文件</button><button class="btn sm" data-a="toast" data-x="原型：群设置（成员、群名、群 AI 开关，只有群主可改）">…</button></div>
+    <div class="ims" data-bottom>${msgs}</div>
+    <div class="icomp">${S.msel.on && S.msel.chat === c.id ? `<div class="msbar"><b>已选 ${S.msel.ids.length} 条</b><button class="btn sm pri" data-a="mHelp" ${S.msel.ids.length ? '' : 'disabled'}>帮我回</button><button class="btn sm" data-a="mTask" ${S.msel.ids.length ? '' : 'disabled'}>建成事项</button><button class="btn sm" data-a="mAddTo" ${S.msel.ids.length ? '' : 'disabled'}>加到事项</button><button class="btn sm" data-a="mNote" ${S.msel.ids.length ? '' : 'disabled'}>记到笔记</button><button class="btn sm" data-a="mGive" ${S.msel.ids.length ? '' : 'disabled'}>✦ 交给${NAME}</button><span class="grow"></span><small>点消息可以勾选或取消</small><button class="btn sm" data-a="mselOff">取消</button></div>` : comp('im-' + c.id, '输入消息，回车发送', 'imSend', { sm:1, top:compTop })}</div></div>`;
+  return `<div class="im">${list}${room}</div>`;
+}
+const lastText = c => { const m = [...c.msgs].reverse().find(x => !x.day); return m ? (m.x || (m.file ? '[文件] ' + fileById(m.file).name : m.card ? '[事项卡片]' : '')) : ''; };
+
+/* ---------- 笔记 ---------- */
+function pNotes(){
+  const n = note(S.nsel);
+  const list = `<div class="nl"><div class="hd"><b>笔记</b><small>随手记碎片信息，只有你看得到</small><span class="grow"></span><button class="btn sm pri" data-a="newNote">＋ 记一条</button></div>
+    <div style="padding:0 14px 8px"><div class="sr" style="border:1px solid var(--line);border-radius:8px;padding:4px 10px;color:var(--ink3);font-size:12.5px;background:#fff">⌕ 搜索笔记</div></div>
+    <div style="flex:1;overflow:auto" data-sc="nl">${NOTES.map(x => `<div class="ni ${S.nsel === x.id ? 'on' : ''}" data-a="nsel" data-x="${x.id}"><div class="m"><span class="tag">${x.src}</span>${x.time}${TASKS.some(t => (t.bind || []).includes(x.id)) ? '<span class="tag ai">已绑定事项</span>' : ''}</div><div class="t">${esc(x.title || '无标题')}</div><div class="p">${esc(x.body.split('\n')[0])}</div></div>`).join('')}</div></div>`;
+  if (!n) return `<div class="nt">${list}<div class="ne"></div></div>`;
+  const sug = S.nsug && S.nsug.id === n.id ? `<div class="sug"><div class="row" style="margin-bottom:6px"><span class="orb xs"></span><b>整理版</b><span class="p1">P1</span><small class="grow">原文保留在上方，可对照</small><button class="btn sm" data-a="nsugOff">收起</button></div>
+      <div style="font-size:13px"><b>要点</b>　${esc(S.nsug.sum)}</div>
+      <div style="font-size:13px;margin-top:4px"><b>发现 1 件可建成事项的内容</b>　${esc(S.nsug.todo)} · ${dlabel(S.nsug.d)}</div>
+      <div class="acts">${S.nsug.added ? '<span class="tag ok">✓ 已建成事项</span>' : `<button class="btn sm pri" data-a="nsugAdd">建成事项</button><button class="btn sm" data-a="noteAddTo">加到事项</button>`}</div></div>` : '';
+  return `<div class="nt">${list}<div class="ne"><div class="tb2"><span class="tag">${n.src}</span><small>${n.time}</small><span class="grow"></span>
+      <button class="btn sm" data-a="noteTidy">✦ 让${NAME}整理<span class="p1">P1</span></button><button class="btn sm" data-a="noteTask">建成事项</button><button class="btn sm" data-a="noteAddTo">加到事项</button><button class="btn sm" data-a="noteWs">交给${NAME}办</button></div>
+    <div class="ed"><div class="in"><span class="pvt">🔒 只有你看得到。笔记不参与分身的自动检索；被绑定、加到事项或在会话里引用时才会用到</span>
+      <input class="tt" id="nt-${n.id}" data-keep placeholder="标题" value="${esc(val('nt-' + n.id) || n.title)}">
+      <textarea class="bd" id="nb-${n.id}" data-keep placeholder="写点什么……可以粘贴图片和链接">${esc(val('nb-' + n.id) || n.body)}</textarea>${sug}</div></div></div></div>`;
+}
+
+/* ---------- 资料库 ---------- */
+const VEC = { y:['y','已向量化'], n:['n','未向量化'], r:['r','向量化中'] };
+function pLib(){
+  const fs = allFiles(), isW = S.folder.startsWith('w-');
+  const ls = fs.filter(f => S.folder === 'kb-all' ? f.folder.startsWith('kb-') : f.folder === S.folder);
+  const left = `<div class="tl"><div class="sh">个人知识库<span class="c"><button class="btn lk" style="font-size:11.5px" data-a="toast" data-x="原型：新建文件夹">＋ 文件夹</button></span></div>${KBF.map(([k, l]) => `<button class="li ${S.folder === k ? 'on' : ''}" data-a="folder" data-x="${k}"><span class="i">${k === 'kb-all' ? '▤' : '▢'}</span>${l}<span class="c">${k === 'kb-all' ? fs.filter(f => f.folder.startsWith('kb-')).length : fs.filter(f => f.folder === k).length}</span></button>`).join('')}
+    <div class="sh" style="margin-top:12px">工作区库<span class="c mut" style="font-size:11px">随工作区生成</span></div>${WSP.map(w => `<button class="li ${S.folder === w.id ? 'on' : ''}" data-a="folder" data-x="${w.id}"><span class="i">▣</span>${esc(w.name)}<span class="c">${fs.filter(f => f.folder === w.id).length}</span></button>`).join('')}
+    <div class="mut" style="padding:14px 10px;font-size:11.5px;line-height:1.7">· 个人知识库：你上传、按文件夹管理的文件<br>· 工作区库：每个工作区一个，存产物和为这个工作区放入的文件<br>· 已向量化的文件，分身办事时才检索得到；原文永远不改</div></div>`;
+  const title = isW ? '工作区库 · ' + wsp(S.folder).name : (KBF.find(f => f[0] === S.folder) || [, ''])[1];
+  const auto = isW ? true : KBAUTO[S.folder];
+  const mid = `<div class="lm"><div class="hd"><h2>${esc(title)}</h2><span class="mut">${ls.length} 个</span><span class="grow"></span>
+      ${S.folder !== 'kb-all' ? `<span class="row" style="font-size:12px;gap:6px">${isW ? '<span class="mut">工作区库默认自动向量化</span>' : `自动向量化<button class="sw ${auto ? 'on' : ''}" data-a="autoVec" data-x="${S.folder}"></button>`}</span>` : ''}
+      <button class="btn sm">⌕ 搜索</button><button class="btn sm pri" data-a="upload">＋ 上传</button></div>
+    <div class="lt2" data-sc="lt"><table><tr><th>名称</th><th>来源</th><th style="width:96px">向量化</th><th style="width:60px">时间</th></tr>
+    ${ls.map(f => `<tr class="fr ${S.fsel === f.id ? 'on' : ''}" data-a="fsel" data-x="${f.id}"><td><div class="row">${extIco(f.type)}<span>${esc(f.name)}</span></div></td><td class="mut">${esc(f.from)}</td><td><span class="vec ${VEC[f.vec || 'n'][0]}">${f.vec === 'r' ? '<i class="spin" style="width:8px;height:8px;border-width:1.5px"></i> ' : ''}${VEC[f.vec || 'n'][1]}</span></td><td class="mut">${f.time}</td></tr>`).join('') || '<tr><td colspan="4" class="mut" style="text-align:center;padding:30px">这里还没有文件。点右上角「上传」，或者在会话里办出产物</td></tr>'}</table></div></div>`;
+  const f = S.fsel && fileById(S.fsel);
+  const right = f ? `<div class="lp"><div class="hd"><b>${esc(f.name)}</b><br><small>${esc(f.from)} · ${f.time} · <span class="vec ${VEC[f.vec || 'n'][0]}">${VEC[f.vec || 'n'][1]}</span></small>
+      <div class="acts"><button class="btn sm" data-a="openArt" data-x="${f.id}">⤢ 打开</button><button class="btn sm acc" data-a="fileFs" data-x="${f.id}">✦ 交给${NAME}</button><button class="btn sm" data-a="fileTask" data-x="${f.id}">建成事项</button><button class="btn sm" data-a="fileAddTo" data-x="${f.id}">加到事项</button><button class="btn sm" data-a="artToChat" data-x="${f.id}">发到聊天</button>
+      ${f.art ? '' : `<button class="btn sm" data-a="vecTog" data-x="${f.id}">${f.vec === 'y' ? '取消向量化' : '发起向量化'}</button>`}</div></div>
+      <div class="box">${artBody(f.kind, f.name)}</div>
+      <div class="ft">${f.art ? `产物 · 来自会话「<a href="#" style="color:var(--acc)" data-a="go" data-x="ws:${ARTS[f.id].sess}">${esc(sess(ARTS[f.id].sess)?.title)}</a>」` : '原文层不改；向量层只用于检索'}</div></div>`
+    : `<div class="lp"><div class="mut" style="text-align:center;margin-top:80px">选一个文件预览</div></div>`;
+  return `<div class="lb">${left}${mid}${right}</div>`;
+}
+
+/* ---------- 分身记得的 ---------- */
+const FACTS = [
+  { t:'李娜 25 号要汇总全局预算，数字化部需 18 号前交', src:'李娜 · 单聊 11-13', k:'承诺' },
+  { t:'王主任关心二期的回退方案', src:'笔记 · 周例会要汇报', k:'事实' },
+  { t:'刘洋答应测试报告周三给（已顺延到 11-18）', src:'项目组群 11-12', k:'承诺' },
+  { t:'你习惯周五下午写周报', src:'工作台 · 3 次会话', k:'偏好' },
+];
+function pMem(){
+  const tabs = [['fact','事实与承诺', FACTS.length],['way','做法', WAYS.length],['rule','规则', RULES.length]];
+  const body = {
+    fact:`<div class="card">${FACTS.map((f, i) => `<div class="ln"><span class="tag">${f.k}</span><div class="grow">${esc(f.t)}<br><small>出处：${esc(f.src)}</small></div><button class="btn sm" data-a="memWrong" data-x="fact:${i}">不对</button><button class="btn lk" style="color:var(--ink3)" data-a="memDel" data-x="fact:${i}">删除</button></div>`).join('')}</div>`,
+    way:`<div class="mut" style="margin-bottom:8px;font-size:12.5px">分身在办事过程中自动沉淀的处理方式，只给你自己用。用到时，依据里会标「按以往做法」。</div><div class="card">${WAYS.map((w, i) => `<div class="ln"><span class="tag ${w.auto ? 'ai' : ''}">${w.auto ? '自动沉淀' : '做法'}</span><div class="grow"><b>${esc(w.t)}</b><br><small>适用：${esc(w.sc)}　步骤：${esc(w.st)}</small></div><button class="btn sm" data-a="toast" data-x="原型：修改这条做法">修改</button><button class="btn lk" style="color:var(--ink3)" data-a="memDel" data-x="way:${i}">删除</button></div>`).join('')}<div class="ln"><span class="grow mut">经提炼、测试、验证后，做法可以变成技能分享给同事（P2）</span></div></div>`,
+    rule:`<div class="mut" style="margin-bottom:8px;font-size:12.5px">分身遇到这些情况会停下来问你。新规则不用来这里建：在对话或会话里说一句「以后……先问我」，或在确认点勾选「以后都这样处理」。</div><div class="card">${RULES.map((r, i) => `<div class="ln"><div class="grow"><b>${esc(r.t)}</b>${r.th ? `　<small>阈值 <input value="${r.th}" style="border:1px solid var(--line);border-radius:6px;padding:1px 6px;width:64px"></small>` : ''}<br><small>${r.lock ? '🔒 底线规则，系统固定，不能关闭' : '来源：' + (r.from || '对话')}</small></div>${r.lock ? '' : `<button class="sw ${r.on ? 'on' : ''}" data-a="ruleTog" data-x="${r.id}"></button><button class="btn lk" style="color:var(--ink3)" data-a="memDel" data-x="rule:${i}">删除</button>`}</div>`).join('')}</div>`,
+  }[S.memTab];
+  return `<div class="pgwrap"><div class="pghd"><span class="orb xs"></span><b>分身记得的</b><span>${NAME}记住的内容都在这里，每条都能看到出处，可以纠正或删除。你看不到的内容，分身也用不到</span><span class="grow"></span><button class="btn sm" data-a="go" data-x="home">← 回到对话</button></div><div class="pgbody" style="display:flex">
+    <div class="tl" style="width:200px;flex:none">${tabs.map(([k, l, n]) => `<button class="li ${S.memTab === k ? 'on' : ''}" data-a="memTab" data-x="${k}">${l}<span class="c">${n}</span></button>`).join('')}</div><div style="flex:1;overflow:auto;background:var(--bg)"><div class="set">${body}</div></div></div></div>`;
+}
+
+/* ---------- 设置 ---------- */
+function pSet(){
+  const tabs = [['av','分身'],['brief','晨报'],['priv','隐私与权限']];
+  const body = {
+    av:`<h3>分身</h3><div class="card"><div class="ln"><span class="orb md"></span><div class="grow"><b>名字</b><br><small>默认「贾维斯」，可以改</small></div><input value="${NAME}" style="border:1px solid var(--line);border-radius:8px;padding:4px 8px;width:140px"></div><div class="ln"><div class="grow"><b>头像</b></div><button class="btn sm">更换</button></div><div class="ln"><div class="grow"><b>分身记得的</b><br><small>事实与承诺、做法、你的规则，都在这里查看和纠正</small></div><button class="btn sm" data-a="go" data-x="mem">打开</button></div></div>`,
+    rules:`<h3>规则 · 哪些情况要先问我</h3><div class="card">${RULES.map(r => `<div class="ln"><div class="grow"><b>${esc(r.t)}</b>${r.th ? `<br><small>阈值：<input value="${r.th}" style="border:1px solid var(--line);border-radius:6px;padding:1px 6px;width:70px"></small>` : ''}${r.lock ? '<br><small class="lock">🔒 底线规则，不能关闭</small>' : ''}</div>${r.lock ? '<button class="sw on" disabled style="opacity:.5"></button>' : `<button class="sw ${r.on ? 'on' : ''}" data-a="ruleTog" data-x="${r.id}"></button>`}</div>`).join('')}
+      <div class="ln"><span class="grow mut">也可以在对话或会话里用一句话新建规则，例如「涉及人事的先问我」</span></div></div>`,
+    brief:`<h3>晨报<span class="p1">P1</span></h3><div class="card"><div class="ln"><div class="grow"><b>推送时间</b></div><select disabled><option>每天 08:30</option></select></div><div class="ln"><div class="grow"><b>频次</b></div><select disabled><option>工作日</option></select></div><div class="ln"><span class="grow mut">首版：打开对话时显示今天的情况；定时推送在 P1</span></div></div>`,
+    priv:`<h3>隐私与权限</h3><div class="card"><div class="ln"><div class="grow"><b>分身按你本人的权限读取</b><br><small>你看不到的内容，分身也用不到</small></div><span class="tag ok">始终</span></div><div class="ln"><div class="grow"><b>分身不能直接发送消息</b><br><small>只起草放进输入框，由你本人发送</small></div><span class="tag ok">始终</span></div><div class="ln"><div class="grow"><b>事项只能由你创建和勾掉</b></div><span class="tag ok">始终</span></div><div class="ln"><div class="grow"><b>笔记只有你看得到</b><br><small>管理员也没有查看入口</small></div><span class="tag ok">始终</span></div></div>`,
+  }[S.setTab];
+  return `<div class="pgwrap"><div class="pghd"><b>设置</b><span>分身的名字头像、晨报，以及隐私和权限说明</span></div><div class="pgbody" style="display:flex">
+    <div class="tl" style="width:200px;flex:none">${tabs.map(([k, l]) => `<button class="li ${S.setTab === k ? 'on' : ''}" data-a="setTab" data-x="${k}">${l}</button>`).join('')}</div><div style="flex:1;overflow:auto;background:var(--bg)"><div class="set">${body}</div></div></div></div>`;
+}
+
+/* ====================== 引擎：工作台执行 ====================== */
+function runSess(s){
+  if (s.stopped) return;
+  if (s.status === 'plan') return;
+  const i = s.steps.findIndex(x => x.s !== 'done');
+  if (i < 0){
+    s.status = 'done'; s.time = '今天 ' + now();
+    if (s.end) s.tail.push({ r:'ai', h:s.end.h, acts:s.end.acts, tm:now() });
+    if (!s.waySaved && s.steps.length > 3){ s.waySaved = 1; WAYS.unshift({ id:uid('w'), t:s.title.replace(/ ·.*$/, '') + '的做法', sc:s.title, st:s.steps.map(z => z.t.replace(/：.*$/, '')).slice(0, 4).join(' → '), auto:1 }); }
+    if (s.goal && !s.goalAsked){ s.goalAsked = 1; s.status = 'wait'; s.tail.push({ r:'ai', tm:now(), h:`我认为目标已经达成：${esc(s.goal.std || s.goal.g)}。要结束这个目标吗？`, acts:[['确认达成','goalOk', s.id],['继续推进','goalMore', s.id]] }); notify(s, 'done'); render(); return; }
+    if ((s.queue || []).length){ const q = s.queue.splice(0); q.forEach(t => s.tail.push({ r:'ai', tm:now(), h:`处理排队的要求：「${esc(t)}」。已按这个调整。` })); }
+    if (s.onDone) s.onDone();
+    notify(s, 'done'); render(); return;
+  }
+  const st = s.steps[i];
+  if (st.k === 'confirm'){ st.s = 'confirm'; s.status = 'confirm'; notify(s, 'confirm'); render(); return; }
+  if (st.k === 'wait'){ st.s = 'wait'; s.status = 'wait'; st.sent = st.sent || []; render(); return; }
+  if (s.goal && st.k === 'write' && !st.rep){ st.rep = 1; s.tail.push({ r:'ai', tm:now(), h:'阶段汇报：资料和依据已备齐，开始生成。' }); }
+  st.s = 'run'; s.status = 'running'; render();
+  setTimeout(() => {
+    if (s.stopped) return;
+    st.s = 'done'; st.tm = now();
+    if (st.done) st.d = st.done;
+    if (st.art){ ARTS[st.art] = ARTS[st.art] || { name:st.artName, type:st.artType, kind:st.artKind }; Object.assign(ARTS[st.art], { sess:s.id, time:'今天 ' + now() }); if (!s.arts.includes(st.art)) s.arts.push(st.art); S.newArt = st.art; S.artSel = st.art; }
+    (st.drafts || []).forEach(d => { S.drafts[d.chat] = Object.assign({ sess:s.id }, d); S.inp['im-' + d.chat] = ''; });
+    runSess(s);
+  }, st.ms || 1500);
+}
+function notify(s, kind){
+  const txt = kind === 'confirm' ? `会话「${s.title}」停在确认点，等你判断。` : `会话「${s.title}」办完了。`;
+  if (S.home.length) S.home.push({ r:'ai', h:txt, cards:[{ sess:s.id }], tm:now() });
+  if (!(S.page === 'ws' && S.cur === s.id)) toast(`${kind === 'confirm' ? '等你确认' : '办完了'} · ${s.title}`, ['去看看', `ws:${s.id}`]);
+}
+
+function newSess(title, req, opt = {}){
+  const id = uid('s'), aid = uid('a'); const mode = opt.mode || 'def';
+  const t = req + title;
+  const kind = /PPT|汇报材料|演示/.test(t) ? ['PPT','ppt','.pptx'] : /表|汇总|统计|清单|排期/.test(t) ? ['XLS','xls','.xlsx'] : ['DOC','doc','.docx'];
+  const plug = /通知|公文|请示|方案|PPT|汇报/.test(t) ? '公文写作' : /预算|测算/.test(t) ? '财务预算' : /等保|安全/.test(t) ? '等保合规' : '调研分析';
+  const p = PLUGINS.find(x => x.name === plug);
+  const ws = opt.ws || (/预算|测算/.test(t) ? 'w-ys' : /等保|迎检/.test(t) ? 'w-db' : /二期|方案|测试|上线|王主任|PPT|周例会/.test(t) ? 'w-2q' : /调研|报告/.test(t) ? 'w-rp' : 'w-def');
+  const s = { id, ws, mode, goal: mode === 'goal' ? { g:req, std:opt.std } : null, title, status: mode === 'plan' ? 'plan' : 'running', time:'今天 ' + now(), plugins:[plug], req, tail:[], arts:[], from:opt.from,
+    ctx:{ in:[...(opt.from ? [['事项', opt.from.l]] : []), ...(opt.ctxIn || []), ...(opt.ctx ? [['引用', opt.ctx]] : []), ['工作区库', wsp(ws).name + ' 里的 ' + (2 + (title.length % 3)) + ' 个文件']], hit:[['文件', '相关资料 · 已向量化', '0.86'], ...(WAYS[0] && /周报|汇报/.test(t) ? [['做法', WAYS[0].t, '0.90']] : [])] },
+    steps:[
+      { k:'plan', t:'定计划：理解要求 → 找依据 → 生成 → 交给你看', s:'todo' },
+      { k:'plan', t:'找依据：本次上下文里的事项、文件和聊天', d: opt.ctx ? `以「${opt.ctx}」为主要依据，另找到相关文件 2 份` : '找到相关文件 2 份、聊天 12 条', s:'todo', ev:[['相关文件 2 份','f-gw']] },
+      { k:'expert', t:`专家「${p.ex[0]}」：核对关键内容`, s:'todo' },
+      { k:'skill', t:`技能「${p.sk[0]}」：按模板起草`, s:'todo' },
+      { k:'write', t:`生成「${title}」`, s:'todo', art:aid, artName:title.replace(/[：:，,。]/g, ' ').trim().slice(0, 18) + kind[2], artType:kind[0], artKind:kind[1] },
+    ],
+    end:{ h:'好了，产物在右边产物区，也已存进这个工作区的工作区库。要改直接在下面说；要发出去的话，我起草好放进输入框，由你发送。', acts:[['发到群（起草）','artToChat', aid],['建成事项','artToTask', aid]] } };
+  if (opt.refs && opt.refs.length) s.ctx.in.push(...opt.refs.map(([t, l]) => ['@' + t, l]));
+  if (mode === 'plan') s.steps.forEach(st => st.s = 'planned');
+  SESS.unshift(s);
+  if (mode !== 'plan') setTimeout(() => runSess(s), 400);
+  return s;
+}
+const titleOf = t => t.replace(/^(帮我|请你?|麻烦|给我)/, '').replace(/[。！!]$/, '').slice(0, 20);
+
+/* ====================== 和分身对话：意图分派 ====================== */
+function parseTask(text){
+  let d = null, list = '收件箱', p = 0, t = text;
+  const m1 = t.match(/周([一二三四五六日])/), m2 = t.match(/(\d{1,2})\s*[号日]/);
+  if (/今天/.test(t)) d = 16; else if (/明天/.test(t)) d = 17; else if (/后天/.test(t)) d = 18;
+  else if (m1) d = 16 + '一二三四五六日'.indexOf(m1[1]); else if (m2) d = +m2[1];
+  const ml = t.match(/#(\S+)/); if (ml){ list = LISTS.find(l => l.replace(/\s/g, '').includes(ml[1])) || ml[1]; t = t.replace(ml[0], ''); if (!LISTS.includes(list) && list !== '收件箱') LISTS.push(list); }
+  else { const g = LISTS.find(l => (l === '二期上线' && /方案|二期|上线|测试/.test(t)) || (l === '2027 预算' && /预算|测算/.test(t)) || (l === '等保迎检' && /等保|迎检/.test(t))); if (g) list = g; }
+  if (/!高|！高/.test(t)){ p = 3; t = t.replace(/[!！]高/, ''); }
+  t = t.replace(/^(提醒我|帮我记得|别忘了|记得|建个事项[:：]?)/, '').trim();
+  return { title:t, d, list, p, src:{ t:'fs', l:'对话 · 刚刚' } };
+}
+function route(text, ctx){
+  const lc = text;
+  if (/今天.*(处理|要做|什么事)|晨报|有什么要/.test(lc)) return { h:'早，这是今天的情况。', brief:1 };
+  if (/进度|怎么样了|办到哪/.test(lc)) { const r = SESS.filter(s => s.status !== 'done'); return { h:`工作台里有 ${r.length} 个会话还没办完：`, cards:r.map(s => ({ sess:s.id })) }; }
+  if (/^(记一下|记一条|记住|记下)/.test(lc)){
+    const body = lc.replace(/^(记一下|记一条|记住|记下)[:：，,]?\s*/, '');
+    return { h:'帮你预填好了一条笔记，确认后保存。', pre:newPre({ kind:'note', title:body.slice(0, 12), body }) };
+  }
+  if (/提醒|别忘|之前|前把|前给|前交|建个事项/.test(lc)){
+    const t = parseTask(lc);
+    return { h:'帮你预填好了一个事项，改好后确认才会建成。', pre:newPre(Object.assign({ kind:'task' }, t)) };
+  }
+  if (/回(复)?.*(李娜|王建国|王主任|刘洋|周敏)|帮我回/.test(lc)){
+    if (/王/.test(lc)){ S.drafts['c-wang'] = { chat:'c-wang', text:'王主任，方案 v0.3 先发您，测试结论出来后我再补 v0.4，周四前给您完整版。', why:'依据：事项「方案给王建国看」' }; S.inp['im-c-wang'] = ''; return { h:'给王主任的草稿放进你们的聊天输入框了，由你本人发送。', acts:[['去发送','go','im:c-wang']] }; }
+    draftLina(); return { h:'草稿放进你和李娜的聊天输入框了。依据是你 11-12 的笔记"还差硬件报价"，所以先给不含硬件的一版。', acts:[['去发送','go','im:c-lina']] };
+  }
+  if (/二期上线是哪天|上线时间/.test(lc)) return { h:'二期计划 12-08 上线，11-27 方案定稿。<span class="ev" data-a="evOpen" data-x="n4">依据 · 项目组群 11-12</span>' };
+  if (/就在这答/.test(lc)) return { h:'好，就在这里答，不开会话。' };
+  const id = uid('q'); const t = titleOf(lc); const g = newSess.guess ? null : null;
+  S.pend = S.pend || {}; S.pend[id] = { t, req:lc, ctx };
+  const ws = /预算|测算/.test(lc) ? 'w-ys' : /等保|迎检/.test(lc) ? 'w-db' : /二期|方案|测试|上线|王主任|PPT|周例会/.test(lc) ? 'w-2q' : /调研|报告/.test(lc) ? 'w-rp' : 'w-def';
+  S.pend[id].ws = ws;
+  return { h:`这件事需要分几步办、还要生成文件，建议在工作区「<b>${esc(wsp(ws).name)}</b>」开一个会话。`, acts:[['确认，开会话','pendOk', id],['换个工作区','pendWs', id],['就在这答','pendNo', id]] };
+}
+function say(text, ctx){
+  text = (text || '').trim(); if (!text) return;
+  S.home.push({ r:'me', h:(ctx ? `<div class="quote">${esc(ctx)}</div>` : '') + esc(text) });
+  S.typing = true; render();
+  setTimeout(() => { S.typing = false; const r = route(text, ctx); r.r = 'ai'; r.tm = now(); S.home.push(r); render(); }, 750);
+}
+function draftLina(){ S.drafts['c-lina'] = { chat:'c-lina', text:'可以的，18 号下班前发你。硬件报价还在等华信，先给你一版不含硬件的，19 号补齐。', why:'依据：你 11-12 的笔记' }; S.inp['im-c-lina'] = ''; }
+
+/* ====================== 动作 ====================== */
+function go(x){
+  const [p, a] = String(x).split(/:(.+)/);
+  S.dot = false;
+  if (p === 'ws'){ S.page = 'ws'; S.wsView = 'sess'; if (a) S.cur = a; S.artTab = 'sess'; S.artSel = null; }
+  else if (p === 'im'){ S.page = 'im'; S.msel = { on:false, ids:[] }; if (a){ S.chat = a; chat(a).un = 0; } }
+  else if (p === 'task'){ S.page = 'tasks'; S.tview = 'list'; S.tsel = a; const t = task(a); if (!TASKS.filter(listFilter()).includes(t)) S.tlist = t.done ? 'done' : t.list; }
+  else if (p === 'tasks'){ S.page = 'tasks'; if (a){ S.tlist = a; S.tsel = TASKS.find(t => !t.done && t.list === a)?.id; } }
+  else if (p === 'note'){ S.page = 'notes'; S.nsel = a; }
+  else if (p === 'lib'){ S.page = 'lib'; S.folder = a || 'kb-all'; }
+  else if (p === 'file'){ S.page = 'lib'; S.fsel = a; const f = fileById(a); S.folder = f ? (f.folder.startsWith('w-') ? f.folder : 'kb-all') : 'kb-all'; }
+  else if (p === 'set'){ if (a === 'rules'){ S.page = 'mem'; S.memTab = 'rule'; } else { S.page = 'set'; if (a) S.setTab = a; } }
+  else if (p === 'mem'){ S.page = 'mem'; if (a) S.memTab = a; }
+  else S.page = p;
+  if (S.page === 'im') chat(S.chat).un = 0;
+  render();
+}
+const msgOf = x => { const c = CHATS.find(z => z.msgs.some(m => m.id === x)); return [c, c.msgs.find(z => z.id === x)]; };
+function addCtx(tid, kind, label){ const t = task(tid); t.ctx = t.ctx || []; t.ctx.push([kind, label]); }
+const A = {
+  go, noop(){},
+  toast(x){ toast(x); },
+  say(x){ if (S.page !== 'home') S.page = 'home'; say(x); },
+  homeSend(){ say(take('home-in')); },
+  dotSend(){ const t = take('dot-in'); if (t) say(t, '正在看：' + ctxNow()); },
+  dot(){ S.dot = !S.dot; render(); if (S.dot) setTimeout(() => $('#dot-in')?.focus(), 30); },
+  draftLina(){ draftLina(); go('im:c-lina'); },
+  newPpt(){ const s = newSess('周例会汇报 PPT · 二期进展', '做个 PPT：周例会汇报二期进展，给王主任看，6 页左右', { ws:'w-2q' }); S.home.push({ r:'ai', h:'好，在工作区「二期上线」开了一个会话做 PPT。', cards:[{ sess:s.id }], tm:now() }); render(); },
+  pendOk(id){ const p = S.pend[id]; if (!p || p.done) return; p.done = 1; const s = newSess(p.t, p.req, { ctx:p.ctx, ws:p.ws }); S.home.push({ r:'ai', tm:now(), h:`好，在工作区「${esc(wsp(p.ws).name)}」开了会话，开始办。过程和产物都在工作台，遇到规则里的情况会停下来问你。`, cards:[{ sess:s.id }] }); render(); },
+  pendWs(id){ const p = S.pend[id]; const k = WSP.findIndex(w => w.id === p.ws); p.ws = WSP[(k + 1) % WSP.length].id; S.home.push({ r:'ai', tm:now(), h:`那放进工作区「<b>${esc(wsp(p.ws).name)}</b>」？`, acts:[['确认，开会话','pendOk', id],['再换一个','pendWs', id]] }); render(); },
+  pendNo(id){ S.pend[id].done = 1; S.home.push({ r:'ai', tm:now(), h:'好，就在这里简单说：这件事我先给你一个思路提纲，需要成文时再开会话。' }); render(); },
+  preOk(id){
+    const p = S.pre[id]; if (!p || p.st !== 'open') return;
+    const ti = (S.inp['pre-t-' + id] || p.title).trim();
+    if (p.kind === 'note'){ const n = { id:uid('n'), title:ti, body:S.inp['pre-b-' + id] || p.body, time:'今天 ' + now(), src:'对话' }; NOTES.unshift(n); p.rid = n.id; }
+    else {
+      const dv = $('#pre-d-' + id)?.value, lv = $('#pre-l-' + id)?.value;
+      const t = { id:uid('t'), title:ti, d: dv && dv !== 'null' ? +dv : p.d, list: lv || p.list, p:p.p || 0, src:p.src, ctx:p.ctxItems || [], bind: p.bind && ($('#pre-bd-' + id)?.checked ?? true) ? [p.bind] : [] };
+      if (!LISTS.includes(t.list) && t.list !== '收件箱') LISTS.push(t.list);
+      TASKS.push(t); p.rid = t.id;
+    }
+    p.title = ti; p.st = 'ok'; A.closeMask(); toast(p.kind === 'note' ? '已保存笔记' : '已建成事项', ['查看', (p.kind === 'note' ? 'note:' : 'task:') + p.rid]); render();
+  },
+  preNo(id){ const p = S.pre[id]; if (p) p.st = 'no'; A.closeMask(); render(); },
+  addToOk(tid){ const a = S.addCtx; (a.items || [[a.src, a.ctx.slice(0, 40)]]).forEach(([k, l]) => addCtx(tid, k, l)); S.msel = { on:false, ids:[] }; A.closeMask(); toast('已加到事项，作为一条上下文', ['查看', 'task:' + tid]); render(); },
+
+  /* 工作台 */
+  newSess(){ S.cur = null; S.wsView = 'sess'; S.newWsp = S.newWsp || 'w-def'; render(); setTimeout(() => $('#ws-in')?.focus(), 30); },
+  newWsp(){ S.wsView = 'sess'; const n = prompt('新工作区名称（同时在资料库生成同名的工作区库）', '新工作区'); if (!n) return; const w = { id:uid('w-'), name:n }; WSP.splice(WSP.length - 1, 0, w); S.newWsp = w.id; S.cur = null; toast(`已新建工作区「${n}」，资料库里同时有了它的工作区库`); render(); },
+  wspTog(x){ S.wsOpen[x] = S.wsOpen[x] === false; render(); },
+  wsQuick(x){ S.inp['ws-in'] = x + '：'; render(); $('#ws-in').focus(); },
+  wsSend(){
+    const t = take('ws-in'); if (!t) return;
+    if (!S.cur || S.wsView !== 'sess'){ S.wsView = 'sess'; const w = $('#new-wsp')?.value || 'w-def'; const s = newSess(titleOf(t), t, { ws:w, mode:S.newMode, std:take('goal-std'), refs:S.refs.new }); S.refs.new = []; S.cur = s.id; S.rp = s.mode === 'plan' ? 'plan' : 'art'; render(); return; }
+    const s = sess(S.cur); s.tail.push({ r:'me', h:esc(t) });
+    const rf = S.refs[s.id] || []; if (rf.length){ s.ctx.in.push(...rf.map(([a, l]) => ['@' + a, l])); S.refs[s.id] = []; }
+    if (s.status === 'running'){ s.queue = s.queue || []; s.queue.push(t); render(); return; }
+    if (/(先问我|要问我)/.test(t)){ RULES.push({ id:uid('r'), t:t.replace(/^以后/, '').replace(/[。！!]$/, ''), on:true }); s.tail.push({ r:'ai', h:`记下了：「${esc(t)}」，作为你的规则对全部会话生效，可以在「分身记得的」里改。`, tm:now() }); render(); return; }
+    if (/做成(一个)?轻应用/.test(t)){ s.tail.push({ r:'ai', h:'好，把这次的办法做成了轻应用「预算测算汇总工具」：选测算表、设阈值就能出汇总表。在左栏「轻应用」里可以打开。', acts:[['打开看看','appOpen','ys']], tm:now() }); render(); return; }
+    S.typing = true; render();
+    setTimeout(() => {
+      S.typing = false;
+      const last = s.arts[s.arts.length - 1];
+      if (last){
+        const a = ARTS[last], nid = uid('a'), nm = a.name.replace(/( v\d+)?(\.\w+)$/, (m0, v, e) => ` v${(+(v || ' v1').trim().slice(1)) + 1}${e}`);
+        ARTS[nid] = { name:nm, type:a.type, kind:a.kind === 'ys1' ? 'ys2' : a.kind, sess:s.id, time:'今天 ' + now() }; s.arts.push(nid); S.artSel = nid; S.newArt = nid;
+        s.tail.push({ r:'ai', h:`好，按"${esc(t)}"改了一版，右侧是 <b>${esc(nm)}</b>。旧版本保留，可以「对比」。`, tm:now() });
+      } else s.tail.push({ r:'ai', h:'收到，已记成这个会话的要求，后面的步骤按这个来。', tm:now() });
+      render();
+    }, 900);
+  },
+  rpTab(x){ S.rp = x; S.rpOpen = true; render(); },
+  rpOpen(){ S.rpOpen = true; render(); },
+  rpClose(){ S.rpOpen = false; render(); },
+  rpWide(){ S.rpWide = !S.rpWide; render(); },
+  stepTog(x){ S.stepOpen[x] = !S.stepOpen[x]; render(); },
+  wsView(x){ S.wsView = x; render(); },
+  appOpen(){ S.page = 'ws'; S.wsView = 'app'; S.appRan = false; render(); },
+  appRun(){ S.appRan = true; render(); },
+  sessMenu(x){
+    const s = sess(x);
+    $('#mask').innerHTML = `<div class="dlg" data-stop style="width:360px"><div class="hd"><b class="grow">${esc(s.title)}</b></div><div class="bd2">${[['重命名','sessRen'],[s.pin ? '取消置顶' : '置顶','sessPin'],['移到其他工作区','sessMove'],['归档','sessArch']].map(([l, a]) => `<div class="chk" style="cursor:pointer" data-a="${a}" data-x="${x}">${l}</div>`).join('')}<div class="chk mut">从这里分叉<span class="p1">P1</span></div></div><div class="ft2"><button class="btn" data-a="closeMask">关闭</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  sessRen(x){ const n = prompt('会话名称', sess(x).title); if (n) sess(x).title = n; A.closeMask(); render(); },
+  sessPin(x){ sess(x).pin = !sess(x).pin; A.closeMask(); render(); },
+  sessMove(x){ const s = sess(x); const k = WSP.findIndex(w => w.id === (s.ws || 'w-def')); s.ws = WSP[(k + 1) % WSP.length].id; A.closeMask(); toast(`已移到工作区「${wsp(s.ws).name}」，产物一起移过去`); render(); },
+  sessArch(x){ sess(x).arch = 1; if (S.cur === x) S.cur = null; A.closeMask(); toast('已归档'); render(); },
+  refPick(k){
+    const items = [...TASKS.filter(t => !t.done).slice(0, 5).map(t => ['事项', t.title]), ...FILES.slice(0, 4).map(f => ['文件', f.name]), ...CHATS.filter(c => !c.g || c.ai).slice(0, 3).map(c => ['聊天', c.n]), ...NOTES.slice(0, 2).map(n => ['笔记', n.title])];
+    S.refItems = items; S.refKey = k || (S.cur && S.wsView === 'sess' ? S.cur : 'new');
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><b class="grow">@ 引用</b><small>选中的内容会带进本次上下文</small></div><div class="bd2">${items.map(([t, l], i) => `<div class="chk" style="cursor:pointer" data-a="refAdd" data-x="${i}"><span class="tag">${t}</span><span class="grow">${esc(l)}</span></div>`).join('')}</div><div class="ft2"><button class="btn" data-a="closeMask">完成</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  refAdd(i){ const k = S.refKey; S.refs[k] = S.refs[k] || []; S.refs[k].push(S.refItems[+i]); A.closeMask(); render(); },
+  refDel(k, i){ S.refs[k].splice(+i, 1); render(); },
+  skillPick(){
+    const sk = PLUGINS.filter(p => p.on).flatMap(p => p.sk.map(k => [k, p.name]));
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><b class="grow">/ 调用技能</b><small>按这个技能的办法来办</small></div><div class="bd2">${sk.map(([k, p]) => `<div class="chk" style="cursor:pointer" data-a="skillUse" data-x="${k}"><b class="grow">/ ${k}</b><small>插件 · ${p}</small></div>`).join('')}</div><div class="ft2"><button class="btn" data-a="closeMask">关闭</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  skillUse(k){ A.closeMask(); S.inp['ws-in'] = '/' + k + ' ' + (S.inp['ws-in'] || ''); render(); $('#ws-in')?.focus(); },
+  planDel(x, y){ sess(x).steps.splice(+y, 1); render(); },
+  planAdd(){ const s = sess(S.cur); const v = take('padd-' + s.id); if (!v) return; s.steps.splice(s.steps.length - 1, 0, { k:'plan', t:v, s:'planned' }); render(); },
+  planGo(x){ const s = sess(x); s.steps.forEach(st => { if (st.s === 'planned') st.s = 'todo'; }); s.status = 'running'; s.tail.push({ r:'ai', tm:now(), h:'按确认后的计划开始执行。' }); runSess(s); },
+  goalOk(x){ const s = sess(x); s.status = 'done'; s.tail.push({ r:'ai', tm:now(), h:'目标已由你确认达成，这个会话结束。' }); render(); },
+  goalMore(x){ const s = sess(x); s.status = 'running'; s.steps.push({ k:'plan', t:'按你的要求继续推进：补充核对', s:'todo' }); s.goalAsked = 0; runSess(s); },
+  rewind(x, y){
+    const s = sess(x), k = +y;
+    s.steps.forEach((st, n) => { if (n >= k){ if (st.art && ARTS[st.art]){ const o = ARTS[st.art]; st.art = uid('a'); st.artName = o.name.replace(/( v\d+)?(\.\w+)$/, (m0, v, e) => ` v${(+(v || ' v1').trim().slice(1)) + 1}${e}`); st.artType = o.type; st.artKind = o.kind; } if (st.k === 'confirm' || st.k === 'im' || st.k === 'wait') return; st.s = 'todo'; st.tm = ''; } });
+    s.status = 'running'; s.stopped = false; s.tail.push({ r:'ai', tm:now(), h:`从第 ${k + 1} 步重新办（已发出的消息和收到的回复不重做）。之前生成的产物保留为旧版本。` }); runSess(s);
+  },
+  artCmp(a, b){
+    const A1 = ARTS[a], B1 = ARTS[b];
+    const sum = A1.kind === 'ys1' && B1.kind === 'ys2' ? '改动 2 处：服务器维保 46.0 → 12.0 万（剔除延续合同）；低代码平台许可改列「软件许可」。合计 346.5 → 312.5 万。' : '改动已在右侧标出。';
+    $('#mask').innerHTML = `<div class="sheet"><div class="hd"><b class="grow">版本对比</b><button class="btn sm" data-a="closeMask">关闭</button></div><div class="bd"><div class="cmpsum">${sum}</div><div class="cmpw"><div><h4>${esc(A1.name)}</h4>${artBody(A1.kind, A1.name)}</div><div><h4>${esc(B1.name)}</h4>${artBody(B1.kind, B1.name)}</div></div></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  stopSess(x){ const s = sess(x); s.stopped = true; s.status = 'done'; s.steps.forEach(st => { if (st.s === 'run') st.s = 'todo'; }); s.tail.push({ r:'ai', h:'已停止。办到一半的东西留在会话里，说"接着办"就能继续。', tm:now() }); render(); },
+  ctxTog(){ S.ctxOpen = !S.ctxOpen; render(); },
+  ctxDel(x, y){ const [g, k] = y.split(':'); sess(x).ctx[g].splice(+k, 1); toast('已从本次上下文移除，原文不受影响；后面的步骤不再用它'); render(); },
+  ctxAdd(){ toast('原型：从事项、资料库、聊天、笔记里选，加入本次上下文'); },
+  cp(x, y){
+    const s = sess(x), st = s.steps.find(z => z.s === 'confirm');
+    if ($('#cpk-' + x)?.checked){ RULES.push({ id:uid('r'), t:'口径和财务通知不一致时，先问相关科室', on:true, from:'确认点' }); toast('已记成你的规则，可在「分身记得的」里修改'); }
+    st.s = 'done'; st.tm = now(); st.d = '你的判断：' + CP[st.cp].opts.find(o => o[0] === y)[1].replace(/（.*）/, '');
+    const linaText = y === 'ask' ? '李娜，数字化部 2027 年预算测算汇总表见附件，合计 312.5 万。运维科维保已剔除延续合同，应用科许可费已改列"软件许可"。硬件等华信报价，19 号补齐。'
+      : '李娜，数字化部 2027 年预算测算汇总表见附件，合计 346.5 万。其中维保含延续合同 34 万、低代码许可列在新建项目，口径如需调整请告诉我。';
+    if (y === 'ask') s.steps.push(
+      { k:'im', t:'起草给运维科张伟、应用科孙婷的询问，放进各自的聊天输入框', d:'附上财务通知第 3 条原文 · 由你本人发送', s:'todo', ev:[['财务通知 · 第 3 条','f-tz']],
+        drafts:[{ chat:'c-zw', text:'张伟，预算测算里服务器维保 46 万含了 2026 年延续合同 34 万。按财务通知第 3 条只报新增，麻烦确认下新增部分是多少？', why:'依据：财务通知第 3 条' },{ chat:'c-st', text:'孙婷，低代码平台许可 18.5 万按财务通知应列入「软件许可」，我这边改列可以吗？', why:'依据：财务通知第 3 条' }] },
+      { k:'wait', t:'等张伟、孙婷回复', wt:'张伟、孙婷', chats:['c-zw','c-st'], done:'两位都回复了：维保剔除延续合同，改报 12.0 万；许可费同意改列「软件许可」', s:'todo' },
+      { k:'write', t:'更新汇总表 v2', d:'合计 312.5 万，较 2026 年 +3.0%', s:'todo', art:'ys2', artName:'2027 预算测算汇总表 v2.xlsx', artType:'XLS', artKind:'ys2' });
+    s.steps.push({ k:'im', t:'起草给李娜的消息，放进你们的聊天输入框', d:'附汇总表 · 由你本人发送', s:'todo', drafts:[{ chat:'c-lina', text:linaText, why:'附汇总表', att: y === 'ask' ? 'ys2' : 'ys1' }] });
+    s.end = { h:'汇总表好了。给李娜的消息和附件已经放进你们的聊天输入框，你确认后发送。', acts:[['去发送','go','im:c-lina']] };
+    s.onDone = () => { const t = task('t2'); if (t && !t.done) addCtx('t2', '产物', ARTS[y === 'ask' ? 'ys2' : 'ys1'].name + '（待你确认关联）'); };
+    runSess(s);
+  },
+  dbShare(){
+    const items = [['周敏 · 安全管理制度（修订版）',28],['刘洋 · 机房出入记录、应急演练记录',25],['赵磊 · 网络拓扑图、资产清单',26],['吴凯（外部）· 渗透测试报告',30]];
+    S.dbItems = items;
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><span class="orb xs"></span><b class="grow">建议建成 4 个事项</b><small>勾选你要建的，确认后才创建</small></div><div class="bd2">${items.map(([t, d], k) => `<label class="chk"><input type="checkbox" id="dbi-${k}" checked><span class="grow">${t}</span><small>${dlabel(d)} · 等保迎检</small></label>`).join('')}<div class="mut" style="margin-top:8px">建成后，分工表可以起草发到项目组群，由你本人发送。</div></div><div class="ft2"><button class="btn" data-a="closeMask">取消</button><button class="btn pri" data-a="dbOk">确认建成</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  dbOk(){
+    let n = 0; S.dbItems.forEach(([t, d], k) => { if ($('#dbi-' + k)?.checked){ n++; TASKS.push({ id:uid('t'), title:t, d, list:'等保迎检', p:1, src:{ t:'ws', id:'db', l:'会话 · 等保迎检材料清单' } }); } });
+    A.closeMask();
+    const s = sess('db'); S.drafts['g-xt2'] = { chat:'g-xt2', text:'等保迎检材料分工如下，期限见表，有问题直接在群里说。', why:'附分工表', att:'db1' }; S.inp['im-g-xt2'] = '';
+    s.tail.push({ r:'ai', h:`已按你的勾选建成 ${n} 个事项，在清单「等保迎检」下。分工表的消息起草好了，放在项目组群的输入框，由你本人发送。`, acts:[['看事项','go','tasks:等保迎检'],['去发送','go','im:g-xt2']], tm:now() });
+    render();
+  },
+  saveWay(x){ const s = sess(x); if (s.waySaved) return; s.waySaved = 1; WAYS.unshift({ id:uid('w'), t:s.title.replace(/ ·.*$/, '') + '的做法', sc:s.title, st:s.steps.map(z => z.t.replace(/：.*$/, '')).slice(0, 4).join(' → ') }); s.tail.push({ r:'ai', h:'存好了，在工作台左栏「我的做法」里。下次办类似的事，我会带上它。', tm:now() }); render(); },
+  plugOpen(x){ S.plugOpen = S.plugOpen === x ? null : x; render(); },
+  plugTog(x){ const p = PLUGINS.find(z => z.id === x); p.on = !p.on; toast(p.on ? `已启用「${p.name}」` : `已停用「${p.name}」，${NAME}不会再用它的技能和专家`); render(); },
+  artTab(x){ S.artTab = x; S.artSel = null; render(); },
+  artSel(x){ S.artSel = x; if (S.page === 'ws' && S.cur && !sess(S.cur).arts.includes(x)) S.artTab = 'all'; render(); },
+  openArt(x){ const f = fileById(x); $('#mask').innerHTML = `<div class="sheet"><div class="hd">${extIco(f.type)}<div class="grow"><b>${esc(f.name)}</b><br><small>${esc(f.from)}</small></div><button class="btn sm">阅读 / 编辑</button><button class="btn sm">导出</button><button class="btn sm" data-a="closeMask">关闭</button></div><div class="bd">${artBody(f.kind, f.name)}</div></div>`; $('#mask').classList.add('on'); },
+  closeMask(){ $('#mask').classList.remove('on'); },
+  artToChat(x){ S.drafts['g-xt2'] = { chat:'g-xt2', text:'附件请大家看一下。', why:'附文件', att: ARTS[x] ? x : null }; S.inp['im-g-xt2'] = ''; toast('草稿和附件放进了「协同办公二期项目组」的输入框，由你本人发送', ['去发送', 'im:g-xt2']); render(); },
+  artToTask(x){ const f = fileById(x); preDlg({ kind:'task', title:'跟进：' + f.name.replace(/\.\w+$/, ''), d:18, list:'收件箱', src:{ t:'ws', id:ARTS[x]?.sess || S.cur, l:'产物 · ' + f.name }, ctx:f.name, ctxItems:[['产物', f.name]] }); },
+  artAddTo(x){ addToDlg(fileById(x).name, '产物'); },
+  evOpen(x){
+    const e = EVID[x] || { n:'依据', q:'原文片段' };
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><b class="grow">${e.inf ? '推断' : '依据'} · ${esc(e.n)}</b><button class="btn sm" data-a="closeMask">关闭</button></div><div class="bd2"><div class="srcq" style="${e.inf ? 'border-color:var(--wait);background:#faf8ff' : ''}">${e.q}</div>${e.inf ? '<p class="mut">推断用紫色标出，和原文写明的事实区分开。</p>' : '<p class="mut">高亮是这一步用到的片段。可以跳到原文所在的位置查看上下文。</p>'}</div>
+      <div class="ft2"><button class="btn" data-a="evWrong" data-x="${x}">不对</button>${e.inf ? '' : `<button class="btn pri" data-a="evGo" data-x="${x}">打开原文</button>`}</div></div>`;
+    $('#mask').classList.add('on');
+  },
+  evWrong(){ A.closeMask(); toast('已记下你的反馈，分身会在当前会话里重新处理这一步（首版不写入长期记忆）'); },
+  evGo(x){ A.closeMask(); if (x === 'n4') go('note:n4'); else go('file:' + x); },
+
+  /* 事项 */
+  tlist(x){ S.tlist = x; S.tsel = TASKS.filter(listFilter())[0]?.id || null; render(); },
+  tsel(x){ S.tsel = x; if (S.tview === 'cal'){ const t = task(x); if (!TASKS.filter(listFilter()).includes(t)) S.tlist = t.done ? 'done' : t.list; } render(); },
+  tview(x){ S.tview = x; render(); },
+  tdone(x){ const t = task(x); if (t.done) return A.reopen(x); t.done = true; t.looks = false; toast('完成 ✓ · ' + t.title + '（在「已完成」里能找回）'); render(); },
+  notDone(x){ task(x).looks = false; render(); },
+  newList(){ const n = prompt('新清单名称', ''); if (n){ LISTS.push(n); S.tlist = n; S.tsel = null; render(); } },
+  tadd(){ const v = take('tadd'); if (!v) return; const t = Object.assign({ id:uid('t') }, parseTask(v)); t.src = { t:'me', l:'手动添加' }; const dv = $('#tadd-d')?.value, lv = $('#tadd-l')?.value; if (dv) t.d = +dv; if (lv){ t.list = lv; } if (!lv && !SMART.find(s => s[0] === S.tlist) && S.tlist !== t.list && !/#/.test(v)) t.list = S.tlist; if (S.tlist === 'today' && t.d == null) t.d = 16; TASKS.push(t); S.tsel = t.id; if (!listFilter()(t)) toast(`已加到「${t.list}」· ${dlabel(t.d) || '无日期'}`, ['查看', 'task:' + t.id]); render(); },
+  subDone(x, y){ const sb = task(x).sub[+y]; sb.done = !sb.done; render(); },
+  subAdd(){ const t = task(S.tsel); const v = take('sadd-' + t.id); if (!v) return; t.sub = t.sub || []; t.sub.push({ t:v, d:null }); render(); },
+  subWs(x, y){ const t = task(x), sb = t.sub[+y]; const s = newSess(sb.t, `把这件事办了：${sb.t}（属于事项「${t.title}」）`, { from:{ t:'事项', id:t.id, l:t.title + ' / ' + sb.t }, ctxIn:(t.ctx || []).slice() }); go('ws:' + s.id); S.rp = 'ctx'; render(); },
+  tctxDel(x, y){ task(x).ctx.splice(+y, 1); toast('已从事项里拿掉，原文还在'); render(); },
+  unbind(x, y){ const t = task(x); t.bind = t.bind.filter(c => c !== y); render(); },
+  bindPick(x){
+    const t = task(x);
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><b class="grow">绑定聊天或笔记</b><small>群 AI 未开启的群不能绑定</small></div><div class="bd2">${CHATS.map(c => `<div class="chk" ${c.g && !c.ai ? '' : `data-a="bindDo" data-x="${x}" data-y="${c.id}" style="cursor:pointer"`}><span class="grow">💬 ${esc(c.n)}</span>${(t.bind || []).includes(c.id) ? '<span class="tag ok">已绑定</span>' : c.g && !c.ai ? '<span class="tag">AI 未开启，不能绑定</span>' : ''}</div>`).join('')}${NOTES.slice(0, 4).map(n => `<div class="chk" data-a="bindDo" data-x="${x}" data-y="${n.id}" style="cursor:pointer"><span class="grow">✎ ${esc(n.title || '无标题')}</span>${(t.bind || []).includes(n.id) ? '<span class="tag ok">已绑定</span>' : ''}</div>`).join('')}</div><div class="ft2"><button class="btn" data-a="closeMask">完成</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  bindDo(x, y){ const t = task(x); t.bind = t.bind || []; if (!t.bind.includes(y)) t.bind.push(y); A.bindPick(x); render(); },
+  taskToWs(x){
+    const t = task(x);
+    const items = [...(t.ctx || []).map(([k, l]) => [k, l]), ...(t.bind || []).map(b => ['绑定', chat(b) ? chat(b).n + '（新消息）' : note(b)?.title || ''])];
+    const ws = { '2027 预算':'w-ys', '等保迎检':'w-db', '二期上线':'w-2q' }[t.list] || 'w-def';
+    S.tws = { id:x, items };
+    $('#mask').innerHTML = `<div class="dlg" data-stop style="width:580px"><div class="hd"><span class="orb xs"></span><b class="grow">带上下文交给${NAME}办</b><small>会在工作台开一个会话</small></div><div class="bd2">
+      <div class="form" style="grid-template-columns:80px 1fr;margin-top:0"><span class="mut">要办什么</span><input id="tws-req" value="${esc('把这件事办了：' + t.title + (t.d ? '，期限 ' + dlabel(t.d) : ''))}">
+      <span class="mut">放进工作区</span><select id="tws-ws">${WSP.map(w => `<option value="${w.id}" ${w.id === ws ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select>
+      <span class="mut">执行模式</span><select id="tws-mode">${MODES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>
+      <b style="font-size:12.5px">一起带上的上下文（${items.length + 1} 项）</b>
+      <label class="chk"><input type="checkbox" checked disabled><span class="tag">事项</span><span class="grow">${esc(t.title)}</span></label>
+      ${items.map(([k, l], n) => `<label class="chk"><input type="checkbox" id="tws-${n}" checked><span class="tag">${k}</span><span class="grow">${esc(l)}</span></label>`).join('')}
+      <p class="mut" style="margin:8px 0 0">分身还会按需检索工作区库和已向量化的资料。开始后可以在右侧「上下文」里增删。</p></div>
+      <div class="ft2"><button class="btn" data-a="closeMask">取消</button><button class="btn pri" data-a="twsGo">开始办</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  twsGo(){
+    const { id, items } = S.tws, t = task(id);
+    const sel = items.filter((_, n) => $('#tws-' + n)?.checked);
+    const s = newSess(t.title, $('#tws-req').value, { from:{ t:'事项', id:t.id, l:t.title }, ws:$('#tws-ws').value, mode:$('#tws-mode').value, ctxIn:sel });
+    if (!t.fs) t.fs = s.id; A.closeMask(); go('ws:' + s.id); S.rp = 'ctx'; S.rpOpen = true; render();
+    toast(`已带着 ${sel.length + 1} 项上下文开了会话`);
+  },
+  reopen(x){ const t = task(x); t.done = false; t.looks = false; S.tlist = t.d != null && t.d <= 16 ? 'today' : 'all'; S.tsel = x; toast('已重新打开。上下文和之前的会话都还在，可以继续办'); render(); },
+  tmore(){ S.tmore = !S.tmore; render(); },
+  ctxText(){ const t = task(S.tsel), v = take('cin-' + t.id); if (!v) return; addCtx(t.id, '背景', v.slice(0, 60)); toast('已加入上下文'); render(); },
+  ctxFrom(k){
+    const t = task(S.tsel);
+    const items = k === 'msg' ? CHATS.filter(c => !c.g || c.ai).flatMap(c => c.msgs.filter(m => m.x && !m.me).map(m => ['消息', `${m.f}：${m.x.slice(0, 36)}`, c.n])).slice(0, 10)
+      : k === 'note' ? NOTES.map(n => ['笔记', n.title || '无标题', n.body.split('\n')[0].slice(0, 24)])
+      : allFiles().map(f => ['文件', f.name, f.folder.startsWith('w-') ? '工作区库 · ' + wsp(f.folder).name : '个人知识库']);
+    S.cfItems = items;
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><b class="grow">${{ msg:'从聊天选', note:'从笔记选', file:'从资料库选' }[k]}</b><small>加入事项「${esc(t.title.slice(0, 14))}」的上下文</small></div><div class="bd2">${k === 'msg' ? '<p class="mut" style="margin-top:0">群 AI 未开启的群不会出现在这里</p>' : ''}${items.map(([kk, l, sub], n) => `<label class="chk"><input type="checkbox" id="cf-${n}"><span class="grow">${esc(l)}<br><small>${esc(sub)}</small></span></label>`).join('')}</div><div class="ft2"><button class="btn" data-a="closeMask">取消</button><button class="btn pri" data-a="cfOk">加入上下文</button></div></div>`;
+    $('#mask').classList.add('on');
+  },
+  cfOk(){ const t = task(S.tsel); let n = 0; S.cfItems.forEach(([k, l], i) => { if ($('#cf-' + i)?.checked){ addCtx(t.id, k, l); n++; } }); A.closeMask(); toast(`已加入 ${n} 项上下文`); render(); },
+  remind(x){ const t = task(x); toast(`${NAME}起草好了提醒${t.wait}的消息，放在项目组群的输入框，由你本人发送`, ['去看看', 'im:g-xt2']); S.drafts['g-xt2'] = { chat:'g-xt2', text:`@${t.wait} ${t.title.split('·')[1]?.trim() || ''}今天能给吗？方案要等它，有困难跟我说。`, why:'依据：事项「' + t.title + '」' }; S.inp['im-g-xt2'] = ''; },
+
+  /* 消息 */
+  imSend(){
+    const c = chat(S.chat), v = take('im-' + c.id); if (!v) return;
+    const d = S.drafts[c.id]; delete S.drafts[c.id];
+    const sv = d && d.sess && sess(d.sess);
+    c.msgs.push({ me:1, t:now(), x:v, file: d?.att, drafted: sv ? sv.title : null });
+    if (sv){
+      const st = sv.steps.find(z => z.s === 'wait' && (z.chats || []).includes(c.id));
+      if (st){ st.sent.push(c.id); S.bindSug = { chat:c.id, task:'t2', sess:sv.id }; }
+      if (c.id === 'c-lina'){ const t = task('t2'); t.looks = true; S.home.push({ r:'ai', tm:now(), h:'给李娜的回复已发送。事项「回复李娜：需求测算表 18 号前能否给」看起来办完了，要勾掉吗？', acts:[['去勾掉','go','task:t2']] }); toast('已发送 · 事项看起来办完了，由你决定是否勾掉', ['去看看', 'task:t2']); }
+    }
+    render();
+  },
+  bindOk(){
+    const b = S.bindSug; S.bindSug = null; const t = task(b.task); t.bind = t.bind || []; if (!t.bind.includes(b.chat)) t.bind.push(b.chat);
+    toast(`已绑定到事项「${t.title}」`);
+    const s = sess(b.sess), st = s.steps.find(z => z.s === 'wait');
+    if (st && st.chats.every(c => st.sent.includes(c) && t.bind.includes(c))){
+      setTimeout(() => {
+        chat('c-zw').msgs.push({ f:'张伟', t:now(), x:'新增部分是 12 万，延续合同那块不报了。' }); chat('c-zw').un = 1;
+        chat('c-st').msgs.push({ f:'孙婷', t:now(), x:'可以，改列软件许可没问题。' }); chat('c-st').un = 1;
+        st.s = 'done'; st.tm = now(); st.d = st.done; s.status = 'running'; toast('张伟、孙婷回复了 · 会话继续', ['去看看', 'ws:' + s.id]); runSess(s);
+      }, 2200);
+    }
+    render();
+  },
+  bindNo(){ S.bindSug = null; toast('没有绑定。会话收不到回复，会停在「等回复」'); render(); },
+  dropDraft(x){ delete S.drafts[x]; S.inp['im-' + x] = ''; render(); },
+  saveFile(x){ const f = fileById(x); f.folder = 'kb-ys'; f.from = '从聊天保存'; toast(`已保存到个人知识库「预算资料」，正在向量化`, ['查看', 'file:' + x]); },
+  giveFs(x){
+    const [c, m] = msgOf(x);
+    S.dot = true; S.home.push({ r:'me', h:`<div class="quote">${esc(m.f)} · ${esc(c.n)} · ${m.t}<br>${esc(m.x)}</div>交给你看看` });
+    S.typing = true; render();
+    setTimeout(() => {
+      S.typing = false;
+      if (x === 'm-liuy') S.home.push({ r:'ai', tm:now(), h:'测试报告是二期方案的前置。晚两天的话，方案 v0.4 也要顺延，但离 11-27 定稿还有余量。建议：', acts:[['确认顺延到 11-18，并起草提醒','extendLiuy'],['开会话评估对上线的影响','assessLiuy'],['先不动','noop']] });
+      else if (x === 'm-lina') S.home.push({ r:'ai', tm:now(), h:'李娜要的需求测算表，工作台里正在汇总，停在确认点等你判断。要我：', acts:[['去确认点','go','ws:ys'],['先起草一句回复','draftLina']] });
+      else if (x === 'm-wk') S.home.push({ r:'ai', tm:now(), h:'这是外部人员要的培训排期，12-01 截止。要开一个会话起草排期吗？', acts:[['开会话起草排期','wsFromMsg','培训排期草案（给华信）'],['建成事项','msgTask', x]] });
+      else S.home.push({ r:'ai', tm:now(), h:'收到。要我：', acts:[['建成事项','msgTask', x],['开会话办','wsFromMsg', m.x.slice(0, 16)]] });
+      render();
+    }, 800);
+  },
+  extendLiuy(){ task('t4').d = 18; S.drafts['g-xt2'] = { chat:'g-xt2', text:'@刘洋 测试报告期限顺延到 18 号，环境还没恢复的话先给我已测部分。', why:'依据：你刚才的决定' }; S.inp['im-g-xt2'] = ''; S.home.push({ r:'ai', tm:now(), h:'按你的确认，事项期限改到 11-18。给刘洋的话放进了项目组群的输入框，由你本人发送。', acts:[['去发送','go','im:g-xt2']] }); render(); },
+  assessLiuy(){ const s = newSess('测试报告延期对二期上线的影响', '刘洋说测试报告晚两天，评估对 11-27 定稿和 12-08 上线的影响', { ctx:'刘洋 · 项目组群 · 测试报告晚两天', ws:'w-2q' }); S.home.push({ r:'ai', tm:now(), h:'好，在工作区「二期上线」开了会话评估。', cards:[{ sess:s.id }] }); render(); },
+  wsFromMsg(x){ const s = newSess(x, x); S.home.push({ r:'ai', tm:now(), h:`好，在工作区「${esc(wsp(s.ws).name)}」开了会话。`, cards:[{ sess:s.id }] }); render(); },
+  mselOn(x){ S.msel = { on:true, chat:S.chat, ids:[x] }; render(); },
+  mselOff(){ S.msel = { on:false, ids:[] }; render(); },
+  mselTog(x){ const i = S.msel.ids.indexOf(x); if (i < 0) S.msel.ids.push(x); else S.msel.ids.splice(i, 1); render(); },
+  mHelp(){
+    const c = chat(S.chat), ms = S.msel.ids.map(i => c.msgs.find(m => m.id === i)), who = [...new Set(ms.filter(m => !m.me).map(m => m.f))];
+    const txt = c.id === 'g-xt2' && who.includes('刘洋') ? `@刘洋 测试报告可以顺延到 18 号，环境恢复前先把已测部分发我。${who.includes('周敏') ? '@周敏 法务意见出来后第一时间同步我，合同盖章版华信周五寄到。' : ''}` : `收到，${who.join('、') || '大家'}提到的${ms.length > 1 ? '这几件事' : '这件事'}我都记下了，今天内逐一回复。`;
+    S.drafts[c.id] = { chat:c.id, text:txt, why:`依据：选中的 ${ms.length} 条消息，合成一条回复` }; S.inp['im-' + c.id] = ''; S.msel = { on:false, ids:[] }; render();
+  },
+  mTask(){
+    const c = chat(S.chat), ms = S.msel.ids.map(i => c.msgs.find(m => m.id === i)), who = [...new Set(ms.filter(m => !m.me).map(m => m.f))];
+    S.mPick = { c:c.id, ms };
+    if (who.length > 1){
+      $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><span class="orb xs"></span><b class="grow">这几条消息像是 ${who.length} 件事</b></div><div class="bd2">${ms.map(m => `<div class="quote">${esc(m.f || '我')}：${esc(m.x || '[文件]')}</div>`).join('')}<p class="mut">合成一个事项：几条消息都放进它的上下文。分别建成：每人一件，你勾选后确认。</p></div><div class="ft2"><button class="btn" data-a="mTaskSplit">分别建成 ${who.length} 个</button><button class="btn pri" data-a="mTaskOne">合成一个事项</button></div></div>`;
+      $('#mask').classList.add('on');
+    } else A.mTaskOne();
+  },
+  mTaskOne(){ const { c, ms } = S.mPick, ch = chat(c); S.msel = { on:false, ids:[] }; preDlg({ kind:'task', title:`跟进：${(ms.find(m => m.x) || {}).x?.slice(0, 18) || ch.n}`, d:18, list:/二期|测试|合同/.test(ms.map(m => m.x).join('')) ? '二期上线' : '收件箱', src:{ t:'im', id:c, l:`${ch.n} · ${ms.length} 条消息` }, bind:c, ctx:ms.map(m => `${m.f || '我'}：${m.x || '[文件]'}`).join('\n'), ctxItems:ms.map(m => ['消息', `${m.f || '我'}：${(m.x || '[文件]').slice(0, 40)}`]) }); },
+  mTaskSplit(){
+    const { c, ms } = S.mPick, ch = chat(c); S.msel = { on:false, ids:[] };
+    S.dbItems = ms.filter(m => !m.me).map(m => [`${m.f}：${(m.x || '').slice(0, 20)}`, 18, m, c]);
+    $('#mask').innerHTML = `<div class="dlg" data-stop><div class="hd"><span class="orb xs"></span><b class="grow">分别建成事项</b><small>勾选你要建的</small></div><div class="bd2">${S.dbItems.map(([t, d], k) => `<label class="chk"><input type="checkbox" id="dbi-${k}" checked><span class="grow">${esc(t)}</span><small>${dlabel(d)}</small></label>`).join('')}</div><div class="ft2"><button class="btn" data-a="closeMask">取消</button><button class="btn pri" data-a="mSplitOk">确认建成</button></div></div>`;
+  },
+  mSplitOk(){ let n = 0; S.dbItems.forEach(([t, d, m, c], k) => { if ($('#dbi-' + k)?.checked){ n++; TASKS.push({ id:uid('t'), title:t, d, list:'二期上线', p:1, src:{ t:'im', id:c, l:`${m.f} · ${chat(c).n}` }, ctx:[['消息', `${m.f}：${m.x}`]], bind:[c] }); } }); A.closeMask(); toast(`已建成 ${n} 个事项`, ['查看', 'tasks:二期上线']); render(); },
+  mAddTo(){ const c = chat(S.chat), ms = S.msel.ids.map(i => c.msgs.find(m => m.id === i)); addToDlg(ms.map(m => `${m.f || '我'}：${m.x || '[文件]'}`).join('\n'), '消息', ms.map(m => ['消息', `${m.f || '我'}：${(m.x || '[文件]').slice(0, 40)}`])); },
+  mNote(){ const c = chat(S.chat), ms = S.msel.ids.map(i => c.msgs.find(m => m.id === i)); const n = { id:uid('n'), title:`${c.n} · ${ms.length} 条消息`, body:ms.map(m => `${m.f || '我'}：${m.x || '[文件]'}`).join('\n'), time:'今天 ' + now(), src:'来自聊天' }; NOTES.unshift(n); S.msel = { on:false, ids:[] }; toast('已记到笔记', ['查看', 'note:' + n.id]); render(); },
+  mGive(){ const c = chat(S.chat), ms = S.msel.ids.map(i => c.msgs.find(m => m.id === i)); S.msel = { on:false, ids:[] }; S.dot = true; S.home.push({ r:'me', h:`<div class="quote">${ms.map(m => `${esc(m.f || '我')} · ${m.t}：${esc(m.x || '[文件]')}`).join('<br>')}</div>交给你看看（${esc(c.n)}，${ms.length} 条）` }); S.typing = true; render(); setTimeout(() => { S.typing = false; S.home.push({ r:'ai', tm:now(), h:`这 ${ms.length} 条里有两件要跟的事：测试报告要晚两天，合同在法务审。要我：`, acts:[['建成事项','go','im:' + c.id],['开会话评估对上线的影响','assessLiuy']] }); render(); }, 800); },
+  msgTask(x){ const [c, m] = msgOf(x); const t = parseTask(m.x); preDlg({ kind:'task', title:`${m.f}：${m.x.slice(0, 22)}`, d:t.d || 18, list:t.list, src:{ t:'im', id:c.id, l:`${m.f} · ${c.n}` }, bind:c.id, ctx:`${m.f}：${m.x}`, ctxItems:[['消息', `${m.f}：${m.x}`]] }); },
+  msgAddTo(x){ const [c, m] = msgOf(x); addToDlg(`${m.f}：${m.x}`, '消息'); },
+  msgNote(x){ const [c, m] = msgOf(x); const n = { id:uid('n'), title:`${m.f} · ${c.n}`, body:m.x, time:'今天 ' + now(), src:'来自聊天' }; NOTES.unshift(n); toast('已记到笔记', ['查看', 'note:' + n.id]); },
+  draftReply(x){ if (x === 'c-lina') draftLina(); else S.drafts[x] = { chat:x, text:'收到，我这边跟进，周四前给你答复。', why:'依据：你的事项' }; S.inp['im-' + x] = ''; render(); },
+
+  /* 笔记 */
+  nsel(x){ S.nsel = x; render(); },
+  newNote(){ const n = { id:uid('n'), title:'', body:'', time:'今天 ' + now(), src:'记一条' }; NOTES.unshift(n); S.nsel = n.id; render(); setTimeout(() => $('#nb-' + n.id)?.focus(), 30); },
+  noteTidy(){ const n = note(S.nsel); S.nsug = n.id === 'n1' ? { id:n.id, sum:'华信盖章合同周五寄到；顺带问周敏法务意见是否有改动。', todo:'确认收到合同盖章版，并问周敏法务意见', d:20 } : { id:n.id, sum:n.body.replace(/\n/g, ' ').slice(0, 40) + '…', todo:'跟进：' + (n.title || n.body.slice(0, 10)), d:18 }; render(); },
+  nsugAdd(){ const n = note(S.nsug.id); S.nsug.added = true; preDlg({ kind:'task', title:S.nsug.todo, d:S.nsug.d, list:'二期上线', src:{ t:'note', id:n.id, l:'笔记 · ' + n.title }, ctx:n.body, ctxItems:[['笔记', n.title]] }); },
+  nsugOff(){ S.nsug = null; render(); },
+  noteTask(){ const n = note(S.nsel); const t = parseTask(n.body.split('\n')[0]); preDlg({ kind:'task', title:n.title || t.title, d:t.d || 18, list:t.list, src:{ t:'note', id:n.id, l:'笔记 · ' + (n.title || '') }, ctx:n.body, ctxItems:[['笔记', n.title || '']] }); },
+  noteAddTo(){ const n = note(S.nsel); addToDlg(n.title + '：' + n.body.split('\n')[0], '笔记'); },
+  noteWs(){ const n = note(S.nsel); const s = newSess('根据笔记：' + (n.title || '无标题'), '根据这条笔记办：' + n.body, { ctx:'笔记 · ' + n.title }); go('ws:' + s.id); },
+
+  /* 资料库 */
+  folder(x){ S.folder = x; S.fsel = null; render(); },
+  fsel(x){ S.fsel = x; render(); },
+  autoVec(x){ KBAUTO[x] = !KBAUTO[x]; toast(KBAUTO[x] ? '已开启：之后放进这个文件夹的文件会自动向量化' : '已关闭自动向量化（已有文件不受影响）'); render(); },
+  vecTog(x){ const f = fileById(x); if (f.vec === 'y'){ f.vec = 'n'; toast('已取消向量化：原文还在，分身检索不到它了'); render(); } else { f.vec = 'r'; render(); setTimeout(() => { f.vec = 'y'; toast('向量化完成，分身办事时可以检索到它'); render(); }, 1800); } },
+  upload(){ if (S.folder.startsWith('w-') || S.folder === 'kb-all'){ /* ok */ } const f = { id:uid('f'), name:'新上传的文件.pdf', type:'PDF', folder:S.folder === 'kb-all' ? 'kb-zd' : S.folder, from:'上传', time:'今天', kind:'doc', vec:(S.folder.startsWith('w-') || KBAUTO[S.folder] || S.folder === 'kb-all') ? 'r' : 'n' }; FILES.unshift(f); S.fsel = f.id; render(); if (f.vec === 'r') setTimeout(() => { f.vec = 'y'; render(); }, 1800); },
+  fileFs(x){ const f = fileById(x); S.dot = true; render(); S.inp['dot-in'] = ''; setTimeout(() => { const e = $('#dot-in'); if (e){ e.value = `看一下《${f.name}》，`; S.inp['dot-in'] = e.value; e.focus(); } }, 30); },
+  fileTask(x){ const f = fileById(x); preDlg({ kind:'task', title:'跟进：' + f.name.replace(/\.\w+$/, ''), d:18, list:'收件箱', src:{ t:'me', l:'文件 · ' + f.name }, ctx:f.name, ctxItems:[['文件', f.name]] }); },
+  fileAddTo(x){ addToDlg(fileById(x).name, '文件'); },
+
+  /* 设置 */
+  setTab(x){ S.setTab = x; render(); },
+  memTab(x){ S.memTab = x; render(); },
+  memDel(x){ const [g, i] = x.split(':'); ({ fact:FACTS, way:WAYS, rule:RULES })[g].splice(+i, 1); toast('已删除，分身之后不会再用它'); render(); },
+  memWrong(x){ const n = prompt('哪里不对？分身会按你的说法纠正', ''); if (n){ const i = +x.split(':')[1]; FACTS[i].t = n; FACTS[i].src += ' · 你已纠正'; render(); } },
+  ruleTog(x){ const r = RULES.find(z => z.id === x); if (r.lock) return; r.on = !r.on; render(); },
+};
+
+/* ====================== 提示 ====================== */
+let tt;
+function toast(m, act){
+  const t = $('#toast'); t.innerHTML = esc(m) + (act ? `<button data-a="go" data-x="${act[1]}">${act[0]}</button>` : '');
+  t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 4200);
+}
+function renderGuide(){
+  const g = $('#guide');
+  if (!S.guide || S.page !== 'home' || S.home.length){ g.className = 'guide min'; g.innerHTML = '演示路线 ▸'; g.dataset.a = 'guideOn'; return; }
+  g.className = 'guide'; delete g.dataset.a;
+  g.innerHTML = `<button class="x" data-a="guideOff">—</button><b>演示路线</b><ol>
+    <li>事项：点「回复李娜」，补一段背景，再「带上下文交给贾维斯办」</li><li>消息：项目组群里悬停消息点「多选」，选两条试「帮我回」「建成事项」</li><li>首页点「今天有什么要处理的」→「去确认」</li>
+    <li>工作台：看右侧「计划」「上下文」；展开「已执行 n 步」点依据</li>
+    <li>确认点选「先问这两个科室」，可勾选「以后都这样处理」</li>
+    <li>去消息发出张伟、孙婷的草稿并「绑定」，回工作台看续跑和 v2，点「对比」</li>
+    <li>工作台左下：插件、自动化、轻应用（打开示例应用）</li>
+    <li>新会话把模式切到「先出计划」或「按目标推进」试试</li>
+    <li>首页右上「分身记得的」：事实、做法、规则</li></ol>`;
+}
+A.guideOff = () => { S.guide = false; renderGuide(); };
+A.guideOn = () => { S.guide = true; if (S.page !== 'home' || S.home.length){ S.page = 'home'; S.home = []; render(); } else renderGuide(); };
+
+/* ====================== 事件 ====================== */
+document.addEventListener('click', e => {
+  if (e.target.id === 'mask') return A.closeMask();
+  const el = e.target.closest('[data-a]');
+  if (S.dot && !e.target.closest('.dpop') && !e.target.closest('.dot') && !(el && /^(giveFs|fileFs)$/.test(el.dataset.a))){ S.dot = false; if (!el) return render(); }
+  if (!el) return;
+  e.preventDefault(); e.stopPropagation();
+  const f = A[el.dataset.a]; if (f) f(el.dataset.x, el.dataset.y);
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset && el.dataset.a2 === 'modeSel'){ const k = el.dataset.x; if (k === 'new') S.newMode = el.value; else sess(k).mode = el.value; render(); } if (el.dataset && el.dataset.a2 === 'verSel'){ S.artSel = el.value; render(); }
+  if (el.id === 'new-wsp') S.newWsp = el.value;
+});
+document.addEventListener('input', e => {
+  const el = e.target; if (el.dataset.keep === undefined) return;
+  S.inp[el.id] = el.value;
+  if (el.id.startsWith('nt-')) note(el.id.slice(3)).title = el.value;
+  if (el.id.startsWith('nb-')) note(el.id.slice(3)).body = el.value;
+  if (el.id.startsWith('tt-')) task(el.id.slice(3)).title = el.value;
+});
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'j'){ e.preventDefault(); if (S.page === 'home') $('#home-in')?.focus(); else A.dot(); return; }
+  if (e.key === 'Escape'){ A.closeMask(); if (S.dot){ S.dot = false; render(); } return; }
+  const el = e.target;
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && el.dataset && el.dataset.enter){ e.preventDefault(); S.inp[el.id] = el.value; A[el.dataset.enter](); }
+});
+
+render();
+setTimeout(() => runSess(sess('db')), 1500);
+</script>
+</body>
+</html>
